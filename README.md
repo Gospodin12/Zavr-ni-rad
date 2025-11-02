@@ -1,2 +1,2 @@
-# Zavr-ni-rad
+# Zavrsni-rad
 Završni rad za fakultet
