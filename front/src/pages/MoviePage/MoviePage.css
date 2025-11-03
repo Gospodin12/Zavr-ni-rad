@@ -1,0 +1,377 @@
+.movie-page-container {
+  min-height: 100vh;
+  color: white;
+  padding: 30px 100px 30px 100px;
+  font-family: "Inter", sans-serif;
+  
+}
+
+.user-card-movie {
+  background: rgba(255, 255, 255, 0.95);
+  color: #222;
+  padding: 1.5rem;
+  border-radius: 15px;
+  text-align: center;
+  width: 250px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+  float: inline-end;
+  margin-right: 100px;
+  margin-left: 100px;
+  font-size: 20px;
+  width: 400px;
+}
+.user-card-movie h3{
+    font-size: 40px;  
+    margin: 0px 15px 26px 15px;
+}
+.user-card-movie p{
+    font-size: 20px;  
+    margin: 10px;
+    text-align: left;
+}
+.user-card-movie:hover {
+  transform: scale(1.02);
+}
+
+.user-photo-large-movie {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid #3498db;
+
+}
+
+.movies-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.movies-title {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.add-movie-btn {
+  font-size: 28px;
+  background: #000000;
+  color: rgb(255, 255, 255);
+  border: none;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-movie-btn:hover {
+    color:rgb(0, 0, 0);
+
+  background: #ffffff;
+
+}
+
+/* 🎞 Scrollable horizontal carousel */
+.movies-carousel {
+  display: flex;
+  gap: 16px;
+  padding: 20px 0;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  cursor: grab;
+  user-select: none;
+}
+
+.movies-carousel.active {
+  cursor: grabbing;
+}
+
+
+
+.movie-tile {
+  position: relative;
+  flex: 0 0 180px;
+  height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.movie-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(5px) brightness(0.2);
+  transition: 0.4s ease;
+}
+
+.movie-tile:hover img {
+  filter: blur(0px) brightness(1.5);
+  transform: scale(1.05);
+  
+}
+
+.movie-info-overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 5px;
+  transition: opacity 0.3s ease;
+  color: rgb(255, 255, 255);
+}
+
+.movie-info-overlay h3 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.movie-info-overlay p {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.no-movies-text {
+  text-align: center;
+  font-size: 18px;
+  opacity: 0.8;
+  margin: 20px 0;
+}
+
+/* 🪟 Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.3s;
+
+}
+
+.modal {
+  background: white;
+  color: black;
+  border-radius: 12px;
+  width: 360px;
+}
+
+.add-movie-form input,
+.add-movie-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+    resize: none; 
+}
+
+.file-input-label {
+  display: block;
+  margin-bottom: 10px;
+  cursor: pointer;
+  color: #3498db;
+  font-weight: bold;
+}
+
+.preview-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-buttons button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancel-btn {
+  background: #ccc;
+}
+
+.cancel-btn:hover {
+  background: #aaa;
+}
+
+
+/* 🌟 App Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.app-logo {
+  width: 100px;
+  height: auto;
+}
+
+.app-description h1 {
+  margin: 0;
+  font-size: 62px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 50px;
+}
+
+.app-description p {
+  margin-top: 8px;
+  font-size: 25px;
+  color: white;  
+  line-height: 1.5;
+  
+}
+
+/* 🧱 Movies grid */
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 25px;
+  
+}
+
+
+/* Header and layout tweaks */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff00;
+  padding: 25px 30px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  margin-bottom: 40px;
+  
+}
+
+.user-card-movie.large {
+  width: 420px;
+  transform: scale(1.05);
+}
+
+/* Add button next to movie cards */
+.movies-carousel-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+
+
+
+/* Modern glassy modal */
+.modal.modern {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 50px;
+  border-radius: 25px;
+  width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  transform: scale(1.05);
+}
+
+
+
+
+.modal.modern input,
+.modal.modern textarea {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.save-btn {
+  background: #ffffff;
+  color: rgb(0, 0, 0);
+}
+
+.save-btn:hover {
+  background: #bbbbbb;
+}
+.poster-upload {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.poster-label {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+}
+
+.poster-placeholder {
+  width: 450px;
+  height: 280px;
+  border: 2px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: 0.3s;
+}
+
+.poster-placeholder:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.poster-placeholder span {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.poster-preview {
+  width: 450px;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+.logout-movie-page{
+  background-color: gray;
+  color: white;
+  margin-top: 20px;
+    transition: 114ms;
+}
+.logout-movie-page:hover{
+  background-color: rgb(68, 68, 68);
+  color: white;
+  scale: 1.1;
+  transition: 114ms;
+}

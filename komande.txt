@@ -1,0 +1,38 @@
+npm run dev
+
+npm install react-pdf mammoth react-router-dom
+
+npm install pdfjs-dist
+npm install react-pdf pdfjs-dist
+
+npm install jszip
+npm install jszip mammoth react-pdf
+
+npm install jspdf
+
+npm install openai
+
+npm install docx-preview
+(da bi bolje prikazao sve)
+
+
+npm install react-pdf pdfjs-dist docx-preview jszip
+
+
+
+npm install multer libreoffice-convert fs-extra path
+
+npm install react-pdf axios
+
+sa sajta
+npm install @react-pdf/renderer --save
+
+npm install pdfjs-dist file-saver mammoth
+npm install framer-motion za leps izgled
+npm install pdf-lib   ovo je za filtriranje teksta
+
+npm install pdfkit za pravljenje PRAZNOG FAJLA.
+npm install uuid ISTO
+npm install pdf-lib file-saver ZA promenu fajla
+npm install react-quill za editovanje
+npm install react-quill pdf-lib file-saver

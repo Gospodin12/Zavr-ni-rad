@@ -1,0 +1,217 @@
+.team-container {
+  padding: 40px;
+  text-align: center;
+  min-height: 100vh;
+}
+
+.team-title {
+  font-size: 52px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: white;
+  text-align: left;
+  margin-left: 300px; /* 250px sidebar + spacing */
+
+}
+
+
+.team-columns {
+  margin-left: 300px; /* 250px sidebar + spacing */
+  display: flex;
+
+  gap: 40px;
+
+}
+
+.team-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 40%;
+  text-align: left;
+}
+
+.role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 27px;
+  margin-bottom: -26px;
+    margin-top: 1px;
+}
+
+.add-btn {
+  border: none;
+  color: rgb(0, 0, 0);
+  font-size: 20px;
+  padding: 10px;
+  cursor: pointer;
+  transition: 100ms;
+}
+.add-btn:hover {
+  border: none;
+  color: rgb(255, 255, 255);
+  font-size: 20px;
+  padding: 10px;
+  cursor: pointer;
+  background-color: black;
+    transition: 100ms;
+
+}
+.role-list {
+}
+
+
+
+.character {
+  color: #666;
+  font-style: italic;
+}
+.character b{
+  margin-left: 10px;
+}
+.empty {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.bottom-buttons {
+  margin-top: 40px;
+}
+
+.bottom-buttons button {
+  background: #ff5416;
+  color: rgb(255, 255, 255);
+  border: none;
+  padding: 10px 20px;
+
+  border-radius: 8px;
+  font-size: 22px;
+
+
+  width: 200px;
+  color: white;
+  float: left;
+    margin-left: 300px; /* 250px sidebar + spacing */
+transition: 100ms;
+}
+.bottom-buttons button:hover {
+  background: #ffffff;
+  color: rgb(255, 255, 255);
+  border: none;
+  padding: 10px 20px;
+
+  border-radius: 8px;
+  font-size: 22px;
+transition: 100ms;
+
+  width: 200px;
+  color: rgb(0, 0, 0);
+  float: left;
+    margin-left: 300px; /* 250px sidebar + spacing */
+
+}
+
+.popup-window {
+  position: absolute;
+  top: 0;
+  right: 40px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  width: 280px;
+  z-index: 10;
+}
+.popup-window p {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+}
+.popup-window button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  font-size: 17px;
+  padding: 10px;
+
+
+}
+.user-item img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-item-pop:hover{
+  background: #cdcdcd;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.user-item-pop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  font-size: 17px;
+  padding: 10px;
+
+
+}
+
+.user-item-pop img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.button-close-pop{
+  margin-top: 20px;
+  width: 100%;
+  transition: 100ms;
+}
+.button-close-pop:hover{
+  transition: 100ms;
+  background-color: #681c00;
+}
+
+.popup-confirm {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  z-index: 1000;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  width: 250px ;
+}
+
+.popup-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.popup-buttons button {
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.popup-confirm input{
+  width: 210px;
+}

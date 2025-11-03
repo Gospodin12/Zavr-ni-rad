@@ -1,0 +1,267 @@
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: block !important; /* override React default flex center */
+}
+
+/* The entire home layout */
+.home-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* NOTES SECTION (center column) */
+
+/* Shift the rest of the page to the right of sidebar */
+.notes-section {
+  margin-left: 300px; /* 250px sidebar + spacing */
+  flex: 2;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.welcome-text {
+  color: #FFF;
+  margin-bottom: 1rem;
+  text-shadow: 
+      -1px -1px 0 #2c3e50,
+      1px -1px 0 #2c3e50,
+      -1px  1px 0 #2c3e50,
+      1px  1px 0 #2c3e50;
+}
+
+.notes-title {
+  margin-top: 40px;
+  text-align: left;
+  color: #FFF;
+  margin-bottom: 1rem;
+  text-shadow: 
+      -1px -1px 0 #2c3e50,
+      1px -1px 0 #2c3e50,
+      -1px  1px 0 #2c3e50,
+      1px  1px 0 #2c3e50;
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; 
+}
+
+.note-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(255, 255, 255);
+  color: rgb(0, 0, 0);
+  padding: 5px 35px 20px 20px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+}
+
+.note-card:hover {
+  transform: scale(1.02); 
+  cursor: pointer
+}
+
+.note-author-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover; 
+  margin-right: 30px;
+  
+}
+
+.note-details {
+  background: white;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1); 
+}
+
+.back-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 1rem; 
+  font-weight: 600;
+}
+
+.back-btn:hover {
+  background: #2980b9;
+}
+
+.note-pages {
+  margin-top: 1rem;
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+/* USER INFO (right column) */
+.user-info-wrapper {
+  width: 700px;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-left: auto;
+  margin-right: 80px;
+  margin-top: 181px;
+}
+.user-card:hover {
+  transform: scale(1.02);
+}
+.user-card {
+  background: rgb(251, 251, 251);
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  font-size: 24px;
+  width: 400px;
+      transition: all 0.3s ease;
+
+}
+
+.user-photo-large {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid #3498db;
+  margin-bottom: 1rem;
+}
+
+.user-card h3 {
+  margin-top: 0.5rem;
+  color: #2c3e50;
+}
+
+.user-card p {
+  font-size: 18px;
+  color: #34495e;
+  margin: 0.5rem 0;
+  text-align: left;
+}
+
+
+.priority-class {
+  margin-left: auto; /* pushes to the right */
+  text-align: right;
+  font-weight: bold;
+}
+
+.priority-critical {
+  box-shadow: 0 0 25px 5px rgba(255, 0, 0, 0.6);
+}
+
+.priority-medium {
+  box-shadow: 0 0 25px 5px rgba(255, 165, 0, 0.6);
+}
+
+.priority-low {
+  box-shadow: 0 0 25px 5px rgba(0, 255, 0, 0.4);
+}
+
+.priority-critical-text {
+  color: rgb(198, 0, 0);
+}
+
+.priority-medium-text {
+  color: rgb(205, 133, 0);
+}
+
+.priority-low-text {
+  color:  rgb(0, 154, 0);
+}
+
+.note-card:hover {
+  transform: scale(1.02);
+}
+
+
+.priority-class {
+  text-align: right;
+  font-weight: bold;
+}
+
+.priority-class-text {
+  text-align: right;
+  font-weight: bold;
+}
+
+@media (max-width: 900px) {
+  .home-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .notes-section {
+    margin-left: 0;
+  }
+
+  .user-info-wrapper {
+    margin: 2rem auto;
+  }
+}
+.blurred-banner img{
+  color:red;
+  position:absolute;
+  width: 100%;
+  height: 150px;
+  z-index: 1; /* send it behind */
+  top:-5px;
+  left:0px;
+  object-fit: cover; /* ensures image fills container */
+  object-position: center center; /* centers the visible part (crop from middle) */
+  filter: blur(2px);
+    transition: 500ms;
+
+}
+.blurred-banner img:hover{
+  filter: blur(0px);
+  transition: 500ms;
+}
+.blurred-banner h1{
+
+  z-index: 1; /* send it behind */
+  position: relative;
+  z-index: 1; /* bring it in front */
+  bottom: 40px;
+  height: 56px;
+}
+
+.description-home-page{
+  font-size: 20px;
+  margin-top: 20px;
+}
+.p{
+  color: white;
+}
+
+.notes-title:hover{
+  cursor: pointer;
+  scale: 1.004;
+
+  transition: 100ms;
+  color: rgb(242, 255, 146);
+}

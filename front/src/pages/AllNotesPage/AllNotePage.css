@@ -1,0 +1,132 @@
+.notes-section-all {
+  margin-left: 300px; /* 250px sidebar + spacing */
+  flex: 2;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.notes-title-all {
+  margin-top: 40px;
+  text-align: left;
+  color: #FFF;
+  margin-bottom: 3rem;
+  text-shadow: 
+      -1px -1px 0 #2c3e50,
+      1px -1px 0 #2c3e50,
+      -1px  1px 0 #2c3e50,
+      1px  1px 0 #2c3e50;
+}
+
+.notes-list-all {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; 
+}
+
+.note-card-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(255, 255, 255);
+  color: rgb(0, 0, 0);
+  padding: 5px 35px 20px 20px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+}
+
+.note-card-all:hover {
+  transform: scale(1.02); 
+  cursor: pointer
+}
+
+.note-author-img-all {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover; 
+  margin-right: 30px;
+  
+}
+
+.note-details-all {
+  background: white;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1); 
+}
+
+.priority-class-all {
+  margin-left: auto; /* pushes to the right */
+  text-align: right;
+  font-weight: bold;
+}
+
+.priority-critical {
+  box-shadow: 0 0 25px 5px rgba(255, 0, 0, 0.6);
+}
+
+.priority-medium {
+  box-shadow: 0 0 25px 5px rgba(255, 165, 0, 0.6);
+}
+
+.priority-low {
+  box-shadow: 0 0 25px 5px rgba(0, 255, 0, 0.4);
+}
+
+.priority-critical-text {
+  color: rgb(198, 0, 0);
+}
+
+.priority-medium-text {
+  color: rgb(205, 133, 0);
+}
+
+.priority-low-text {
+  color:  rgb(0, 154, 0);
+}
+
+.note-card:hover {
+  transform: scale(1.02);
+}
+
+
+.priority-class {
+  text-align: right;
+  font-weight: bold;
+}
+
+.priority-class-text {
+  text-align: right;
+  font-weight: bold;
+}
+
+
+
+.filters-all {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 60px;
+}
+
+.filters-all input,
+.filters-all select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  background: white;
+  color: #333;
+}
+
+.filters-all input {
+  flex: 1;
+}
+
+.filters-all select:hover,
+.filters-all input:hover {
+  border-color: #3498db;
+}
+.AutorRight{
+    margin-left: 30px;
+}
