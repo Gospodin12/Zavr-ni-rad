@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, cache } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -32,6 +32,126 @@ export default function ScenarioPage() {
   const { movieId } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
+// Helper to highlight text visually in PDF
+const highlightText = (text: string) => {
+  if (!text) return;
+
+  const normalizedSearch = text.replace(/\s+/g, " ").trim().toLowerCase();
+
+  // Collect all spans of the visible PDF page
+  const textLayer = document.querySelector(".react-pdf__Page__textContent");
+  if (!textLayer) return;
+
+  const spans = Array.from(textLayer.querySelectorAll("span"));
+  const fullText = spans.map((s) => s.textContent || "").join(" ");
+  const normalizedFullText = fullText.replace(/\s+/g, " ").toLowerCase();
+
+  // Find start index of the match
+  const matchIndex = normalizedFullText.indexOf(normalizedSearch);
+  if (matchIndex === -1) return;
+
+  // Find where the text starts and ends across spans
+  let charCount = 0;
+  let startSpan = -1;
+  let endSpan = -1;
+
+  for (let i = 0; i < spans.length; i++) {
+    const spanText = (spans[i].textContent || "").replace(/\s+/g, " ");
+    const start = charCount;
+    const end = charCount + spanText.length;
+
+    if (startSpan === -1 && matchIndex >= start && matchIndex < end) {
+      startSpan = i;
+    }
+    if (startSpan !== -1 && matchIndex + normalizedSearch.length <= end) {
+      endSpan = i;
+      break;
+    }
+
+    charCount = end + 1;
+  }
+
+  // Apply highlight to all spans in range
+  if (startSpan !== -1 && endSpan !== -1) {
+    for (let i = startSpan; i <= endSpan; i++) {
+      spans[i].classList.add("pdf-highlight");
+    }
+
+    // Scroll into view (centered)
+    spans[startSpan].scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
+};
+// ... (Zoom functions) ...
+
+const handleDownloadPDF = () => {
+  if (!pdfUrl || !scenario?.title) return;
+  
+  // Create an anchor element to trigger the download
+  const link = document.createElement('a');
+  link.href = pdfUrl;
+  
+  // Use the scenario title for the downloaded file name
+  link.download = `${scenario.title.replace(/\s/g, '_')}_scenario.pdf`;
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// ... (if (isLoading) block) ...
+const [textColor, setTextColor] = useState<string>("");
+const [pageColor, setPageColor] = useState<number>(0);
+
+const FunctionHighlight = () => {
+  try {
+    console.log(movieId,textColor,pageColor)
+    const waitForTextLayer = setInterval(() => {
+      const textLayer = document.querySelector(".react-pdf__Page__textContent");
+      if (textLayer) {
+        clearInterval(waitForTextLayer);
+        setTimeout(() => {
+          highlightText(textColor);
+        }, 100);
+      }
+    }, 100);
+  }
+ catch (e) {
+    console.warn("Highlight data invalid", e);
+  }
+}
+
+
+useEffect(() => {
+  const data = localStorage.getItem("highlightData");
+  if (!data) return;
+
+  try {
+    const { movieId: savedMovie, text, page } = JSON.parse(data);
+    setTextColor(text)
+    setPageColor(page)
+    if (savedMovie !== movieId) return; // only highlight if same movie
+
+    // Wait for the PDF to load
+    const waitForTextLayer = setInterval(() => {
+      const textLayer = document.querySelector(".react-pdf__Page__textContent");
+      if (textLayer) {
+        clearInterval(waitForTextLayer);
+        setPageNumber(page); // go to correct page
+        setScale(2)
+        // Wait for render
+        setTimeout(() => {
+          highlightText(text);
+        }, 700);
+      }
+    }, 300);
+  } catch (e) {
+    console.warn("Highlight data invalid", e);
+  }
+}, [numPages]);
 
   // Get logged in user
   useEffect(() => {
@@ -79,9 +199,16 @@ export default function ScenarioPage() {
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => setNumPages(numPages);
   const changePage = (offset: number) => setPageNumber((p) => p + offset);
-  const zoomIn = () => setScale((p) => Math.min(p + 0.2, 3));
-  const zoomOut = () => setScale((p) => Math.max(p - 0.2, 0.6));
-
+  const zoomIn = () => 
+  {
+    setScale((p) => Math.min(p + 0.2, 3));
+    FunctionHighlight()
+  }
+  const zoomOut = () => 
+  {
+    setScale((p) => Math.max(p - 0.2, 0.6));
+    FunctionHighlight()
+  }
   useEffect(() => {
     const handleMouseUp = (e: MouseEvent) => {
       const selection = window.getSelection();
@@ -99,7 +226,11 @@ export default function ScenarioPage() {
       }
     };
     document.addEventListener("mouseup", handleMouseUp);
-    return () => document.removeEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+      localStorage.removeItem("highlightData");
+
+    }
   }, []);
 
   const handleMakeNote = () => {
@@ -159,6 +290,13 @@ export default function ScenarioPage() {
                 <Page pageNumber={pageNumber} scale={scale} renderTextLayer renderAnnotationLayer />
               </Document>
             </div>
+            <button 
+                className="download-btn" 
+                onClick={handleDownloadPDF} 
+
+            >
+                ⬇️ Preuzmi PDF
+            </button>
           </div>
         )}
       </div>

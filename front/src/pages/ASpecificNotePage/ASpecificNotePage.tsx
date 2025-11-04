@@ -119,15 +119,20 @@ export default function ASpecificNotePage() {
         </div>
 
         {/* Assigned Users */}
+{/* Assigned Users */}
         <div className="assigned-users">
-          <h3>Dodeljeni članovi</h3>
+        <h3>Dodeljeni članovi</h3>
           <div className="assigned-list">
-            {note.assignedTo?.map((u: any) => (
-              <div key={u._id} className="assigned-user-card">
-                <img src={u.picture || noUser} alt={u.name} />
-                <span>{u.name} {u.lastName}</span>
-              </div>
-            ))}
+            {note.assignedTo?.length > 0 ? ( // Check if there are assigned users
+              note.assignedTo.map((u: any) => (
+                <div key={u._id} className="assigned-user-card">
+                  <img src={u.picture || noUser} alt={u.name} />
+                  <span>{u.name} {u.lastName}</span>
+                </div>
+              ))
+            ) : (
+          <p>Nema dodeljenih članova.</p> // Display this if the array is empty
+          )}
           </div>
         </div>
 
@@ -171,9 +176,24 @@ export default function ASpecificNotePage() {
               />
               <button onClick={handleAddComment}>Pošalji</button>
               <div className="bottom-link">
-                <a href={`http://localhost:5173/${movieId}/scenario`} target="_blank" rel="noreferrer">
+                <button
+                  onClick={() => {
+                    // Save text & page info for highlighting
+                    localStorage.setItem(
+                      "highlightData",
+                      JSON.stringify({
+                        movieId,
+                        text: note.text,
+                        page: note.page,
+                      })
+                    );
+
+                    // Open scenario in a new tab
+                    navigate(`/${movieId}/scenario`);
+                  }}
+                >
                   Pogledaj scenario
-                </a>
+                </button>
               </div>
             </div>
           </div>

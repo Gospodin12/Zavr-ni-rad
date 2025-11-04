@@ -267,3 +267,130 @@
 .upload-button-other.secondary:hover {
   background: #df6400;
 }
+/* preview wrapper */
+.html-preview-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* controls row */
+.html-preview-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* preview container that defines a page area (adjust height to match page ratio you want) */
+.html-preview {
+
+  /* keep a page-like viewport (tweak height if you want smaller or larger pages) */
+  height: 1122px; /* A4-ish height at 96dpi; adjust to match PDF viewer if needed */
+  background: #e9e9e9;
+  padding: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto; /* allow internal scrolling if a single node is very big */
+}
+
+/* each page box (white) */
+.html-page {
+  width: 794px; /* approximate A4 width in px at 96dpi; tune to your PDF width if desired */
+  min-height: 100%;
+  max-height: 100%;
+  background: white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  padding: 28px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* inner content class used while measuring (no styling required) */
+.html-page-inner {}
+
+/* editor related */
+.editor-container {
+   margin-top: 20px; 
+  }
+  .editor-container .quill {
+   margin-top: 20px; 
+    height: 700px;
+
+  }
+.editor-actions {
+   margin-top: 58px; display:flex; gap:8px; 
+  }
+.save-btn { background:#4caf50;color:#fff;padding:8px 12px;border:none;border-radius:6px; }
+.cancel-btn { background:#f44336;color:#fff;padding:8px 12px;border:none;border-radius:6px; }
+.edit-button.small { 
+  padding:6px 10px; font-size:20px;
+  height: 44px; 
+  width: 200px;
+  position: relative;
+  right: -430px;
+
+}
+.edit-button-second.small{
+  height: 44px; 
+    width: 200px;
+}
+.page-controls{
+  margin-top: 40px;
+  margin-bottom: 30px;
+}
+.input-search{
+  margin-bottom: 15px;
+  width: 818px;;
+}
+
+.document-div{
+  width: 690px;
+  position: relative;
+  left: 90px;
+  height: 700px;
+  /* --- New property to prevent overflow --- */
+  overflow: hidden; 
+  /* Flexbox properties to center the content (assuming content is a single child element) */
+  display: flex;
+  justify-content: center; /* Centers the inner content horizontally */
+}
+
+.missing-book-message {
+    font-size: 1.5rem;
+    color: #ffffff; /* Svetao crveni ton */
+    text-align: center;
+    padding: 40px 20px;
+    
+    border: 2px dashed #090000; 
+    border-radius: 12px;
+    background-color: #000000; /* Tamna pozadina */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    font-style: italic;
+    font-weight: 600;
+    
+    display: flex; 
+    justify-content: center; 
+
+    align-items: center; 
+    
+    min-height: 250px; /* Postavite minimalnu visinu da se vidi */
+    width: 95%;
+    margin-top: 50px; /* Ako je potrebna margina ispod elementa iznad */
+    
+    background-color: rgb(183, 183, 183);
+}
+.download-btn{
+    display: flex; 
+    justify-content: center; 
+
+    align-items: center; 
+  margin-top: 20px;
+  margin-left: 0;
+  width: 400px;;
+}
+
+.ql-editor{
+  font-size: 1.1rem; /* Choose your desired size */
+  line-height: 1.6; /* Optional: improves readability with larger font */
+}

@@ -117,10 +117,12 @@ input:focus {
 }
 .register-title-container img{
     width: 120px;
-    height: 60px;
-    position:relative;
+    height: 90px;
 
+  position:absolute; 
+  transform: translateX(-109px) translateY(-29px)
 }
+
 /* Fade-in animation */
 @keyframes fadeIn {
   from {

@@ -55,7 +55,7 @@ export default function HomePage() {
               5: "Montažer",
             };
             setRoleText(roleNames[data.role] || "Nepoznata uloga");
-})
+        })
       })
       .catch((err) => {
         console.error("Failed to load user info:", err);

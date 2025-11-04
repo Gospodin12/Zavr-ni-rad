@@ -8,21 +8,19 @@ export const bookService = {
     return res.data;
   },
 
-  async uploadBook(file: File, movieId: string, token: string) {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("movieId", movieId);
-    formData.append("title", "Book");
-    formData.append("description", "Knjiga filma");
-
-    const res = await axios.post(`${API_URL}/add`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return res.data;
-  },
+async uploadBook(file: File, movieId: string, token: string) {
+  const formData = new FormData();
+  console.log(movieId,file)
+  formData.append("movieId", movieId); // 🔹 prvo ovo
+  formData.append("file", file);       // 🔹 pa tek onda fajl
+  console.log(formData)
+  const res = await axios.post(`${API_URL}/add`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.data;
+},
 
   // ✅ Create an empty book (no file upload)
   async createEmptyBook(movieId: string, token: string) {
@@ -35,4 +33,14 @@ export const bookService = {
     );
     return res.data;
   },
+
+  updateBookContent: async (movieId: string, htmlContent: string, token: string) => {
+    return axios.put(
+      `http://localhost:3000/books/update/${movieId}`,
+      { content: htmlContent },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  },
+
 };
+

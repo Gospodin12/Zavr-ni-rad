@@ -9,6 +9,7 @@ const BookSchema = new mongoose.Schema({
   fileUrl: String,
   createdAt: { type: Date, default: Date.now },
   updateAt: { type: Date, default: Date.now },
+  htmlContent: { type: String, default: "" }
 
 });
 

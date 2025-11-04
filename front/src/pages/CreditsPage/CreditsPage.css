@@ -1,0 +1,72 @@
+.credits-container {
+  background: radial-gradient(circle at center, #000000 60%, #111 100%);
+  color: white;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+  font-family: "Courier New", monospace;
+}
+
+.credits-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  position: relative;
+}
+
+.movie-title {
+  font-size: 60px;
+  font-weight: bold;
+  opacity: 0;
+  animation: fadeInOut 4s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.scrolling-credits {
+  position: absolute;
+  bottom: -100%;
+  animation: scrollUp 30s linear forwards;
+  width: 100%;
+}
+
+@keyframes scrollUp {
+  0% { bottom: -100%; }
+  100% { bottom: 100%; }
+}
+
+.credits-section {
+  margin-bottom: 60px;
+}
+
+.credits-section h2 {
+  font-size: 28px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #ffb347;
+}
+
+.credits-section p {
+  font-size: 20px;
+  margin: 5px 0;
+}
+
+.end-text {
+  margin-top: 80px;
+  font-size: 26px;
+  color: #ffb347;
+  animation: fadeIn 3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

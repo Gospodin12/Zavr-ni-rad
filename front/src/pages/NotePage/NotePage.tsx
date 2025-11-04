@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "./NotePage.css";
 import Navbar from "../Navbar/Navbar";
+import noUser from "../../assets/noUser.png"
 import { useNavigate, useParams } from "react-router-dom";
 import { getAllUsers, getUserInfo } from "../../services/authService";
 import { noteService } from "../../services/noteService";
 import { getUserRoleForMovie, getUsersForMovie } from "../../services/movieService";
 import { backgroundService } from "../../services/backgroundService";
-
+import noteIconPic from "../../assets/note.png"
 export default function NotePage() {
   const [selectedText, setSelectedText] = useState<any>(null);
   const [priority, setPriority] = useState("Medium");
@@ -118,8 +119,19 @@ export default function NotePage() {
         _film_id: movieId,
       };
 
-      await noteService.createNote(noteData, token);
+      const noteId = await noteService.createNote(noteData, token);
+      const noteDataWait = await noteService.getNoteById(token, noteId._id);
+
       alert("Beleška uspešno sačuvana!");
+      console.log(noteDataWait,noteDataWait.text,noteDataWait.page)
+      localStorage.setItem(
+          "highlightData",
+           JSON.stringify({
+                movieId,
+                text: noteDataWait.note.text,
+                page: noteDataWait.note.page,
+            })
+      );
       navigate(`/${movieId}/scenario`);
     } catch (err) {
       console.error(err);
@@ -146,7 +158,10 @@ export default function NotePage() {
       <Navbar />
       
       <div className="note-card-new">
-        <h1 className="note-title">Nova beleška</h1>
+        <h1 className="note-title">
+          <img className="note-pic-icon" src={noteIconPic}></img>
+          Nova beleška
+          </h1>
 
         <div className="selected-text-box">
           <p className="selected-text">„{selectedText.text}“</p>
@@ -216,6 +231,8 @@ export default function NotePage() {
           <div className="selected-users">
             {selectedUsers.map((u) => (
               <div key={u._id} className="user-tag">
+                {u.picture ? <img src={u.picture} ></img> 
+                : <img src={noUser} ></img>}              
                 {u.name} {u.lastName}
                 <button className="remove-btn" onClick={() => removeUser(u._id)}>
                   ✕

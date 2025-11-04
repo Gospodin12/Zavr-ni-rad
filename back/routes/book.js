@@ -58,7 +58,7 @@ router.post(
       const doc = new PDFDocument();
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
-      doc.fontSize(22).text(`Knjiga snimanja`, { align: "center" });
+      //doc.fontSize(22).text(`Knjiga snimanja`, { align: "center" });
       doc.moveDown(2);
       doc.fontSize(14).text("Ova knjiga je trenutno prazna i kreirana automatski.", { align: "center" });
       doc.end();
@@ -94,27 +94,53 @@ router.post(
     try {
       const { movieId } = req.body;
       if (!movieId) return res.status(400).json({ message: "movieId is required" });
-
-      const existingBook = await Book.findOne({ movieId });
-      if (existingBook) {
-        return res.status(400).json({ message: "Book already exists for this movie" });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ message: "Book file is required" });
-      }
+      if (!req.file) return res.status(400).json({ message: "Book file is required" });
 
       const fileUrl = `/uploads/books/${req.file.filename}`;
-      const book = new Book({ movieId, fileUrl });
-      await book.save();
+      const existingBook = await Book.findOne({ movieId });
 
-      res.status(201).json({ success: true, book });
+      if (existingBook) {
+        // 🧹 Obrisi stari fajl sa diska ako postoji
+        if (existingBook.fileUrl) {
+          const oldFilePath = path.join(__dirname, "..", "public", existingBook.fileUrl);
+          try {
+            await fs.remove(oldFilePath);
+          } catch (err) {
+            console.warn("⚠️ Could not remove old file:", err.message);
+          }
+        }
+
+        // 🔁 Ažuriraj postojeću knjigu novim fajlom
+        existingBook.fileUrl = fileUrl;
+        existingBook.title = req.body.title || existingBook.title;
+        existingBook.description = req.body.description || existingBook.description;
+        await existingBook.save();
+
+        return res.status(200).json({ success: true, message: "Book replaced successfully", book: existingBook });
+      }
+
+      // ➕ Ako knjiga ne postoji — napravi novu
+      const newBook = new Book({
+        movieId,
+        fileUrl,
+        title: req.body.title || "Knjiga snimanja",
+        description: req.body.description || "Nova knjiga snimanja",
+      });
+
+      await newBook.save();
+
+      res.status(201).json({ success: true, message: "Book created successfully", book: newBook });
     } catch (err) {
-      console.error("❌ Error creating book:", err);
-      res.status(500).json({ success: false, message: "Error creating book", error: err.message });
+      console.error("❌ Error creating/replacing book:", err);
+      res.status(500).json({
+        success: false,
+        message: "Error creating or replacing book",
+        error: err.message,
+      });
     }
   }
 );
+
 
 
 // 📖 Get book by movieId
@@ -150,6 +176,30 @@ router.delete(
       res.json({ success: true, message: "Book deleted successfully" });
     } catch (err) {
       res.status(500).json({ message: "Error deleting book", error: err.message });
+    }
+  }
+);
+
+
+router.put(
+  "/update/:movieId",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const { movieId } = req.params;
+      const { content } = req.body;
+      if (!content) return res.status(400).json({ message: "Content required" });
+
+      const book = await Book.findOne({ movieId });
+      if (!book) return res.status(404).json({ message: "Book not found" });
+
+      book.htmlContent = content;
+      await book.save();
+
+      res.json({ success: true, message: "Book updated", book });
+    } catch (err) {
+      console.error("❌ Error updating book:", err);
+      res.status(500).json({ success: false, message: "Error updating book" });
     }
   }
 );

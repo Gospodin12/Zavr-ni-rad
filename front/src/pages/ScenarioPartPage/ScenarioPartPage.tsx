@@ -9,8 +9,7 @@ import { getUserInfo } from "../../services/authService";
 import { scenarioService } from "../../services/scenarioService";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 import { noteService } from "../../services/noteService";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { backgroundService } from "../../services/backgroundService";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -28,27 +27,28 @@ export default function ScenarioPartPage() {
   const [scriptText, setScriptText] = useState<string>("");
   const [allCharacters, setAllCharacters] = useState<string[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<string>("");
+  const [allLocations, setAllLocations] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
+  const [sceneNumbers, setSceneNumbers] = useState<number[]>([]);
+  const [selectedScene, setSelectedScene] = useState<number | "">("");
 
   const navigate = useNavigate();
   const { movieId } = useParams();
+  const token = localStorage.getItem("token");
 
   // Highlight notes in script text
   const highlightTextWithNotes = (text: string) => {
     if (!notes || notes.length === 0) return text;
-
     let highlighted = text;
     notes.forEach((note) => {
       if (!note.text) return;
-
       const safeText = note.text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(`(${safeText})`, "gi");
-
       highlighted = highlighted.replace(
         regex,
         `<span class="note-highlight" data-id="${note._id}">$1</span>`
       );
     });
-
     return highlighted;
   };
 
@@ -58,17 +58,14 @@ export default function ScenarioPartPage() {
       navigate(`/notes/${id}`);
     }
   };
-  const token = localStorage.getItem("token");
+
   // Load user + notes
   useEffect(() => {
-
     if (!token) {
       navigate("/login");
       return;
-    }  
-
+    }
     noteService.getAllNotes(token).then((res) => setNotes(res));
-
     getUserInfo(token)
       .then((data) => setUser(data.user || data))
       .finally(() => setIsLoading(false));
@@ -77,23 +74,21 @@ export default function ScenarioPartPage() {
   // Load scenario PDF
   useEffect(() => {
     scenarioService
-      .getScenario(movieId+'')
+      .getScenario(movieId + "")
       .then(async (res) => {
         setScenario(res);
         const fullUrl = `http://localhost:3000${res.fileUrl}`;
         setPdfUrl(fullUrl);
         extractTextFromPDF(fullUrl);
-        backgroundService.changeBackgroundPerMovie(token,movieId,navigate)
-        
+        backgroundService.changeBackgroundPerMovie(token, movieId, navigate);
       })
       .catch(() => {
-        setScenario(null)
-        backgroundService.changeBackgroundPerUser(token,movieId,navigate)
-
+        setScenario(null);
+        backgroundService.changeBackgroundPerUser(token, movieId, navigate);
       });
   }, [movieId]);
 
-  // Extract script text from PDF
+  // 🧠 Extract text and detect characters + locations + scenes
   const extractTextFromPDF = async (pdfUrl: string) => {
     const loadingTask = pdfjs.getDocument(pdfUrl);
     const pdf = await loadingTask.promise;
@@ -108,101 +103,151 @@ export default function ScenarioPartPage() {
 
     setScriptText(textContent);
 
-    const regex = /^[A-Z][A-Z0-9 .'\-]{1,25}$/gm;
-    const matches = Array.from(new Set(textContent.match(regex) || []));
-    setAllCharacters(matches.filter((m) => m.length > 2 && m.length < 25));
+    // 🧩 Extract characters (exclude INT./EXT.)
+    const regexChar = /^[A-Z][A-Z0-9 .'\-]{1,25}$/gm;
+    const matches = textContent.match(regexChar) || [];
+    const counts: Record<string, number> = {};
+
+    matches.forEach((m) => {
+      if (!m.startsWith("INT.") && !m.startsWith("EXT.")) {
+        counts[m] = (counts[m] || 0) + 1;
+      }
+    });
+
+    const uniqueChars = Object.keys(counts).filter((c) => counts[c] >= 3);
+    setAllCharacters(uniqueChars);
+
+    // 🏠 Extract locations
+    const regexLoc = /^(INT\.|EXT\.)[^\n]*/gm;
+    const locMatches = textContent.match(regexLoc) || [];
+    const uniqueLocs = Array.from(new Set(locMatches));
+    setAllLocations(uniqueLocs);
+
+    // 🎬 Count scenes
+    const sceneCount = locMatches.length;
+    setSceneNumbers(Array.from({ length: sceneCount }, (_, i) => i + 1));
   };
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => setNumPages(numPages);
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) =>
+    setNumPages(numPages);
   const changePage = (offset: number) => setPageNumber((p) => p + offset);
   const zoomIn = () => setScale((p) => Math.min(p + 0.2, 3));
   const zoomOut = () => setScale((p) => Math.max(p - 0.2, 0.6));
 
-  // Filter dialogue + regenerate PDF
-  const handleCharacterSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const name = e.target.value;
-    setSelectedCharacter(name);
-    if (!name) {
-      setFilteredPdfUrl(null);
-      return;
-    }
+  // 🧩 Generate filtered PDF by character/location/scene
+const handleFilter = async (
+  character?: string,
+  location?: string,
+  sceneNum?: number
+) => {
+  let lines = scriptText.split("\n");
 
-    const lines = scriptText.split("\n");
-    const filtered: string[] = [];
+  // --- Split into scenes first
+  const sceneSplits = scriptText.split(/(?=^(INT\.|EXT\.).*)/gm);
+  if (sceneNum) {
+    const selectedSceneText = sceneSplits[sceneNum] || "";
+    lines = selectedSceneText.split("\n");
+  }
+
+  // --- Filter by location ---
+  if (location) {
     let capturing = false;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line === name) {
+    const filtered: string[] = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith(location)) {
         capturing = true;
-        filtered.push(name);
+        filtered.push(trimmed);
         continue;
       }
-      const isNextName = /^[A-Z][A-Z0-9 .'\-]{1,25}$/.test(line);
-      if (isNextName && capturing) capturing = false;
-      if (capturing && line.length > 0) filtered.push(line);
+      if (/^(INT\.|EXT\.)/.test(trimmed) && capturing && !trimmed.startsWith(location)) {
+        capturing = false;
+      }
+      if (capturing) filtered.push(trimmed);
+    }
+    lines = filtered;
+  }
+
+  // --- Filter by character ---
+  if (character) {
+    const filtered: string[] = [];
+    let capturing = false;
+    const charRegex = new RegExp(`^${character}\\b`, "i");
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (charRegex.test(trimmed)) {
+        capturing = true;
+        filtered.push(trimmed);
+        continue;
+      }
+      const isNextName = /^[A-Z][A-Z0-9 .'\-()]{1,30}$/.test(trimmed);
+      if (isNextName && capturing && !charRegex.test(trimmed)) capturing = false;
+      if (capturing && trimmed.length > 0) filtered.push(trimmed);
+    }
+    lines = filtered;
+  }
+
+  // --- Build new PDF ---
+  const pdfDoc = await PDFDocument.create();
+  let page = pdfDoc.addPage([595.28, 841.89]);
+  const font = await pdfDoc.embedFont(StandardFonts.Courier);
+  const { height } = page.getSize();
+  let y = height - 60;
+
+  for (const line of lines) {
+    const text = line.trim();
+    if (!text) continue;
+
+    if (y < 80) {
+      page = pdfDoc.addPage([595.28, 841.89]);
+      y = height - 60;
     }
 
-    const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage([595.28, 841.89]); // A4
-    const font = await pdfDoc.embedFont(StandardFonts.Courier);
-    const { height } = page.getSize();
-    let y = height - 60;
+    const isChar = /^[A-Z][A-Z0-9 .'\-()]{1,30}$/.test(text);
+    const size = isChar ? 14 : 12;
+    const x = isChar
+      ? 297.64 - font.widthOfTextAtSize(text, size) / 2
+      : 80; // more left padding
+    page.drawText(text, { x, y, size, font, color: rgb(0, 0, 0) });
+    y -= isChar ? 30 : 18;
+  }
 
-    for (const line of filtered) {
-      let text = line.trim();
+  const pdfBytes = await pdfDoc.save();
+  const blob = new Blob([new Uint8Array(pdfBytes)], {
+    type: "application/pdf",
+  });
+  const url = URL.createObjectURL(blob);
+  setFilteredPdfUrl(url);
+  setPageNumber(1);
+};
 
-      if (y < 80) {
-        page = pdfDoc.addPage([595.28, 841.89]);
-        y = height - 60;
-      }
 
-      if (text === name) {
-        page.drawText(text, {
-          x: 297.64 - font.widthOfTextAtSize(text, 14) / 2,
-          y,
-          size: 14,
-          font,
-          color: rgb(0, 0, 0),
-        });
-        y -= 30;
-      } else {
-        const maxWidth = 350;
-        const words = text.split(" ");
-        let lineText = "";
-        for (const word of words) {
-          const testLine = lineText + word + " ";
-          if (font.widthOfTextAtSize(testLine, 12) > maxWidth) {
-            page.drawText(lineText.trim(), { x: 120, y, size: 12, font, color: rgb(0, 0, 0) });
-            y -= 18;
-            lineText = word + " ";
-            if (y < 80) {
-              page = pdfDoc.addPage([595.28, 841.89]);
-              y = height - 60;
-            }
-          } else {
-            lineText = testLine;
-          }
-        }
-        if (lineText.trim()) {
-          page.drawText(lineText.trim(), { x: 120, y, size: 12, font, color: rgb(0, 0, 0) });
-          y -= 18;
-        }
-      }
-    }
+  const handleCharacterSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const name = e.target.value;
+    setSelectedCharacter(name);
+    handleFilter(name, selectedLocation, selectedScene as number);
+  };
 
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    setFilteredPdfUrl(url);
-    setPageNumber(1);
+  const handleLocationSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const loc = e.target.value;
+    setSelectedLocation(loc);
+    handleFilter(selectedCharacter, loc, selectedScene as number);
+  };
+
+  const handleSceneSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const scene = e.target.value ? Number(e.target.value) : "";
+    setSelectedScene(scene);
+    handleFilter(selectedCharacter, selectedLocation, scene as number);
   };
 
   const downloadCurrentPDF = () => {
     const currentUrl = filteredPdfUrl || pdfUrl;
     const a = document.createElement("a");
     a.href = currentUrl!;
-    a.download = filteredPdfUrl ? `${selectedCharacter}_dialogue.pdf` : "full_scenario.pdf";
+    a.download = filteredPdfUrl
+      ? `${selectedCharacter || selectedLocation || selectedScene}_filter.pdf`
+      : "full_scenario.pdf";
     a.click();
   };
 
@@ -221,15 +266,15 @@ export default function ScenarioPartPage() {
       <div className="scenario-card">
         <h1 className="scenario-title">Scenario</h1>
         {!scenario && (
-           <>
-           <div className="no-scenario"><p>Još nema scenarija.</p></div>
-           </>
+          <div className="no-scenario">
+            <p>Još nema scenarija.</p>
+          </div>
         )}
         {scenario && (
           <>
             <div className="character-filter">
               <label>Filtriraj po liku: </label>
-              <select onChange={handleCharacterSelect} value={selectedCharacter}>
+              <select className="select-height-size" onChange={handleCharacterSelect} value={selectedCharacter}>
                 <option value="">-- Svi likovi --</option>
                 {allCharacters.map((c) => (
                   <option key={c} value={c}>
@@ -237,15 +282,37 @@ export default function ScenarioPartPage() {
                   </option>
                 ))}
               </select>
-              <button className="leftButtonPlus" onClick={downloadCurrentPDF}>📘 Preuzmi prikazani PDF</button>
+
+              <label className="label-height-size2">Filtriraj po lokaciji: </label>
+              <select className="select-height-size2" onChange={handleLocationSelect} value={selectedLocation}>
+                <option value="">-- Sve lokacije --</option>
+                {allLocations.map((loc, i) => (
+                  <option key={i} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+
+
             </div>
 
-            {/* PDF VIEWER */}
             <div className="pdf-viewer">
               <div className="pdf-controls">
-                <button disabled={pageNumber <= 1} onClick={() => changePage(-1)}>◀ Pret.</button>
-                <span>Strana {pageNumber} / {numPages}</span>
-                <button disabled={pageNumber >= numPages} onClick={() => changePage(1)}>Sled. ▶</button>
+                <button
+                  disabled={pageNumber <= 1}
+                  onClick={() => changePage(-1)}
+                >
+                  ◀ Pret.
+                </button>
+                <span>
+                  Strana {pageNumber} / {numPages}
+                </span>
+                <button
+                  disabled={pageNumber >= numPages}
+                  onClick={() => changePage(1)}
+                >
+                  Sled. ▶
+                </button>
                 <button onClick={zoomOut}>➖</button>
                 <button onClick={zoomIn}>➕</button>
               </div>
@@ -265,14 +332,11 @@ export default function ScenarioPartPage() {
               </div>
             </div>
 
-            {/* FULL SCRIPT HIGHLIGHT 
-            {!selectedCharacter && scriptText && (
-              <div
-                className="script-highlight-view"
-                dangerouslySetInnerHTML={{ __html: highlightTextWithNotes(scriptText) }}
-                onClick={handleNoteClick}
-              />
-            )}*/}
+            <div className="download-btn-container">
+              <button className="leftButtonPlus" onClick={downloadCurrentPDF}>
+                📘 Preuzmi prikazani PDF
+              </button>
+            </div>
           </>
         )}
       </div>

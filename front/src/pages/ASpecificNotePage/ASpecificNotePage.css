@@ -124,6 +124,7 @@
   margin-top: 20px;
   font-size: 1em;
   margin-bottom: 19px;
+  
 }
 
 .comment-date {
@@ -142,6 +143,8 @@
   border: 1px solid #ddd;
   resize: none;
   position: relative;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Adjust values as needed */
+
 }
 
 .add-comment button {
@@ -197,6 +200,7 @@
     margin-bottom: 50px;
     padding-bottom: 10px;
     padding-top: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Adjust values as needed */
 }
 
 .comments-section{

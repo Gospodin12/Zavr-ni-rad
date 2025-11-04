@@ -61,6 +61,7 @@ function App() {
         <Route path="/:movieId/register" element={<RegisterPage />} />
         <Route path="/:movieId/beleske" element={<AllNotePage />} />
         <Route path="/:movieId/beleska/:noteId" element={<ASpecificNotePage />} />
+        <Route path="/:movieId/credits" element={<ASpecificNotePage />} />
 
 
         <Route path="/:movieId/viewer" element={<PdfWordViewerPage />} />
