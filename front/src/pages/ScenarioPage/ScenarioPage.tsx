@@ -10,6 +10,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 import { backgroundService } from "../../services/backgroundService";
+import { getMAINUserRoleForMovie } from "../../services/movieService";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 export default function ScenarioPage() {
@@ -129,6 +130,8 @@ useEffect(() => {
   const data = localStorage.getItem("highlightData");
   if (!data) return;
 
+
+
   try {
     const { movieId: savedMovie, text, page } = JSON.parse(data);
     setTextColor(text)
@@ -161,7 +164,12 @@ useEffect(() => {
     }  
 
     getUserInfo(token)
-      .then((data) => setUser(data.user || data))
+      .then(async (data) =>
+        {
+          data.role= await getMAINUserRoleForMovie(token,movieId+'')
+          setUser(data)
+
+        })
       .finally(() => setIsLoading(false));
   }, []);
 

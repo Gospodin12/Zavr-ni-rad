@@ -3,17 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { getUserInfo } from "../../services/authService";
 import "./HomePage.css";
 import Navbar from "../Navbar/Navbar";
-import { getUserRoleForMovie } from "../../services/movieService"; // ✅ import your new function
+import { getAllUserRolesForMovie, getUserRoleForMovie } from "../../services/movieService"; // ✅ import your new function
 import { useParams } from 'react-router-dom';
 import { getMovieById } from "../../services/movieService"; // ✅ import your new function
 import { noteService } from "../../services/noteService"; // ✅ import your noteService
 import noUser from "../../assets/noUser.png";
 
-import backDirector from "../../assets/LogosNBack/banner-action.jpg";
-import backActor from "../../assets/LogosNBack/glumaBack.jpg";
-import backSnimatelj from "../../assets/LogosNBack/cam2.jpg";
-import backScenograd from "../../assets/LogosNBack/scen3.webp";
-import backEdit from "../../assets/LogosNBack/eda.jpg";
 import type { User } from "../../models/User";
 import type { Note } from "../../models/Note";
 import type { Movie } from "../../models/Movie";
@@ -41,29 +36,38 @@ export default function HomePage() {
     getMovieById(token,movieId+'').then(data=>{
       setMovie(data)
     })
-    getUserInfo(token)
-      .then((data) => {
-        getUserRoleForMovie(token,movieId+'').then(data2 =>{
-          console.log(data2)
-          data.role = data2.role
-          setUser(data);
-            const roleNames: Record<number, string> = {
-              1: "Režiser",
-              2: "Glumac",
-              3: "Snimatelj",
-              4: "Scenograf",
-              5: "Montažer",
-            };
-            setRoleText(roleNames[data.role] || "Nepoznata uloga");
-        })
-      })
-      .catch((err) => {
-        console.error("Failed to load user info:", err);
-        if (err.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-        }
-      });
+getUserInfo(token)
+  .then((data) => {
+    getAllUserRolesForMovie(token, movieId + "").then((data2) => {
+      console.log("User roles:", data2);
+      data.roles = data2.roles.map((r: any) => r.role); // e.g. [1, 3]
+
+      setUser(data);
+
+      const roleNames: Record<number, string> = {
+        1: "Režiser",
+        2: "Glumac",
+        3: "Snimatelj",
+        4: "Scenograf",
+        5: "Montažer",
+      };
+
+      if (data.roles.length > 0) {
+        const roleTextList = data.roles.map((r: number) => roleNames[r] || "Nepoznata uloga");
+        setRoleText(roleTextList.join(", "));
+      } else {
+        setRoleText("Nema uloga");
+      }
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to load user info:", err);
+    if (err.response?.status === 401) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
+  });
+
       
       if (token) {
       noteService.getMyNotes(token,movieId)

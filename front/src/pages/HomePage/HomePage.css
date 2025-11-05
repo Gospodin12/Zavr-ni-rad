@@ -202,25 +202,26 @@ html, body, #root {
   font-weight: bold;
 }
 
-@media (max-width: 900px) {
-  .home-container {
-    flex-direction: column;
+@media (max-width: 600px) {
+  .blurred-banner h1 {
+    font-size: 1.5rem;
   }
 
-  .sidebar {
-    position: relative;
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    justify-content: space-around;
+  .notes-title {
+    font-size: 1.3rem;
   }
 
-  .notes-section {
-    margin-left: 0;
+  .note-card {
+    padding: 10px 15px;
   }
 
-  .user-info-wrapper {
-    margin: 2rem auto;
+  .user-photo-large {
+    width: 100px;
+    height: 100px;
+  }
+
+  .user-card p {
+    font-size: 16px;
   }
 }
 .blurred-banner img{

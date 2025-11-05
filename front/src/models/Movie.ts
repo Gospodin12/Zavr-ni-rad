@@ -4,4 +4,5 @@ export interface Movie {
   description: string;
   picture?: string;
   created_at?: string;
+  roles?: { role: number; character?: string }[];
 }

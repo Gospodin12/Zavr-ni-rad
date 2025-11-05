@@ -13,7 +13,7 @@ import { bookService } from "../../services/bookService";
 import { useParams, useNavigate } from "react-router-dom";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min?url";
 import { backgroundService } from "../../services/backgroundService";
-import { getUserRoleForMovie } from "../../services/movieService";
+import { getMAINUserRoleForMovie, getUserRoleForMovie } from "../../services/movieService";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -44,8 +44,8 @@ export default function BookPage() {
     getUserInfo(token + "")
       .then((data) => 
         {
-          getUserRoleForMovie(token+'',movieId+'').then(data2 =>{
-              data.role = data2.role
+          getMAINUserRoleForMovie(token+'',movieId+'').then(data2 =>{
+              data.role = data2
               setUser(data);
           })
         }
@@ -220,18 +220,6 @@ export default function BookPage() {
         {book?.htmlContent && !isEditing && (
           <div className="page-controls">
 
-
-            <label>
-              <span className="input-search">🔍 Pretraga:</span>
-              <div className="input-search"></div>
-              <input
-                className="input-search"
-                type="text"
-                placeholder="Search text..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </label>
           </div>
         )}
 

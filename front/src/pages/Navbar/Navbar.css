@@ -11,20 +11,21 @@
   align-items: center;
   padding: 2rem 1rem;
   z-index: 10;
+  transition: all 0.3s ease;
 }
 
 .sidebar-logo {
   width: 120px;
   margin-bottom: 3rem;
   filter: brightness(0) invert(1);
+  transition: all 0.3s ease;
 }
-.sidebar-logo:hover{
-  cursor: pointer;
-  animation: 5ms;
-  filter: brightness(2) invert(0);
-  transition: filter 0.3s;
 
+.sidebar-logo:hover {
+  cursor: pointer;
+  filter: brightness(2) invert(0);
 }
+
 .sidebar ul {
   list-style: none;
   padding: 0;
@@ -36,7 +37,7 @@
   padding: 0.8rem 1.5rem;
   margin: 0.5rem 0;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s, color 0.3s;
   border-radius: 8px;
 }
 
@@ -64,4 +65,39 @@
 
 .logout-btn:hover {
   background-color: #c0392b;
+}
+
+/* 📱 Mobile responsiveness */
+@media (max-width: 900px) {
+  .sidebar {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    height: 70px;
+    width: 100%;
+    bottom: auto;
+    padding: 0.5rem 1rem;
+  }
+
+  .sidebar-logo {
+    width: 60px;
+    margin: 0;
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .sidebar-menu li {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .sidebar-footer {
+    display: none; /* hide logout to save space */
+  }
 }

@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./TeamPage.css";
 import Navbar from "../Navbar/Navbar";
+import deleteButton from "../../assets/delete.png";
 import noUser from "../../assets/noUser.png";
+
 import {
   getFREEUsersForMovie,
   getUsersForMovie,
   assignUserToMovie,
+  removeUserFromMovie,
 } from "../../services/movieService";
 import { backgroundService } from "../../services/backgroundService";
 
@@ -24,6 +27,7 @@ type UserRole = {
 };
 
 export default function TeamPage() {
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const { movieId } = useParams();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserRole[]>([]);
@@ -33,7 +37,9 @@ export default function TeamPage() {
     user: User;
     role: number | "actors";
   } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<UserRole | null>(null); // 🆕 for delete popup
   const [actorCharacter, setActorCharacter] = useState("");
+  const [searchFreeUser, setSearchFreeUser] = useState("");
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -71,10 +77,19 @@ export default function TeamPage() {
       setFreeUsers([]);
       return;
     }
-    const data = await getFREEUsersForMovie(token + "", movieId + "");
+
+    const roleNumber = roleId === "actors" ? 2 : Number(roleId);
+    const data = await getFREEUsersForMovie(token + "", movieId + "", roleNumber);
     setFreeUsers(data.users);
     setOpenPopupRole(roleId);
+    setSearchFreeUser("");
   };
+
+  const filteredFreeUsers = freeUsers.filter(
+    (u) =>
+      u.name.toLowerCase().includes(searchFreeUser.toLowerCase()) ||
+      u.lastName.toLowerCase().includes(searchFreeUser.toLowerCase())
+  );
 
   return (
     <div className="team-page">
@@ -95,17 +110,34 @@ export default function TeamPage() {
                 >
                   +
                 </button>
+
                 {openPopupRole === roleId && (
                   <div className="popup-window">
-                    <p>Dodaj {roleNames[Number(roleId)]}</p>
+                    <p>
+                      Dodaj {roleId === "actors"
+                        ? "Glumca"
+                        : roleNames[Number(roleId)]}
+                    </p>
+
+                    <input
+                      type="text"
+                      className="popup-search"
+                      placeholder="Pretraži korisnike..."
+                      value={searchFreeUser}
+                      onChange={(e) => setSearchFreeUser(e.target.value)}
+                    />
+
                     <div className="user-list-pop">
-                      {freeUsers.length > 0 ? (
-                        freeUsers.map((user) => (
+                      {filteredFreeUsers.length > 0 ? (
+                        filteredFreeUsers.map((user) => (
                           <div
                             key={user._id}
                             className="user-item-pop"
                             onClick={() =>
-                              setConfirmUser({ user, role: Number(roleId) })
+                              setConfirmUser({
+                                user,
+                                role: roleId === "actors" ? "actors" : Number(roleId),
+                              })
                             }
                           >
                             <img src={user.picture || noUser} />
@@ -116,6 +148,7 @@ export default function TeamPage() {
                         <p>Nema slobodnih članova.</p>
                       )}
                     </div>
+
                     <button
                       className="button-close-pop"
                       onClick={() => setOpenPopupRole(null)}
@@ -125,6 +158,7 @@ export default function TeamPage() {
                   </div>
                 )}
               </div>
+
               <div className="role-list">
                 {list.length > 0 ? (
                   list.map((r) => (
@@ -133,6 +167,16 @@ export default function TeamPage() {
                       <span>
                         {r.user.name} {r.user.lastName}
                       </span>
+
+                      {r.role !== 1 && (
+                        <button
+                          className="remove-btn"
+                          style={{ marginLeft: "auto" }} // 👉 move delete button fully right
+                          onClick={() => setDeleteConfirm(r)} // 🆕 open delete confirm popup
+                        >
+                         ❌
+                        </button>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -157,15 +201,26 @@ export default function TeamPage() {
             {openPopupRole === "actors" && (
               <div className="popup-window">
                 <p>Dodaj Glumca</p>
+
+                <input
+                  type="text"
+                  className="popup-search"
+                  placeholder="Pretraži korisnike..."
+                  value={searchFreeUser}
+                  onChange={(e) => setSearchFreeUser(e.target.value)}
+                />
+
                 <div className="user-list-pop">
-                  {freeUsers.length > 0 ? (
-                    freeUsers.map((user) => (
+                  {filteredFreeUsers.length > 0 ? (
+                    filteredFreeUsers.map((user) => (
                       <div
                         key={user._id}
                         className="user-item-pop"
-                        onClick={() => setConfirmUser({ user, role: "actors" })}
+                        onClick={() =>
+                          setConfirmUser({ user, role: "actors" })
+                        }
                       >
-                        <img src={user.picture || noUser} />
+                        <img src={user.picture || noUser} alt="user" />
                         {user.name} {user.lastName}
                       </div>
                     ))
@@ -182,6 +237,7 @@ export default function TeamPage() {
               </div>
             )}
           </div>
+
           <div className="role-list">
             {actors.length > 0 ? (
               actors.map((r) => (
@@ -197,6 +253,13 @@ export default function TeamPage() {
                       </span>
                     )}
                   </div>
+                  <button
+                    className="remove-btn"
+                    style={{ marginLeft: "auto" }} // 👉 move delete button to far right
+                    onClick={() => setDeleteConfirm(r)} // 🆕 actor delete popup
+                  >
+                    ❌
+                  </button>
                 </div>
               ))
             ) : (
@@ -207,15 +270,20 @@ export default function TeamPage() {
       </div>
 
       <div className="bottom-buttons">
-        <button onClick={() => navigate(`/${movieId}/register`)}>
+        <button
+        className="right-move-margin"
+         onClick={() => navigate(`/${movieId}/register`)}>
           Registruj Člana
         </button>
-        <button className="left-move-margin" onClick={() => navigate(`/${movieId}/credits`)}>
+        <button
+          className="left-move-margin"
+          onClick={() => navigate(`/${movieId}/credits`)}
+        >
           Credits
         </button>
-
       </div>
 
+      {/* ✅ Add confirmation popup */}
       {confirmUser && (
         <div className="popup-confirm">
           <p>
@@ -238,6 +306,10 @@ export default function TeamPage() {
               onClick={async () => {
                 const roleNumber =
                   confirmUser.role === "actors" ? 2 : confirmUser.role;
+                if (confirmUser.role === "actors" && !actorCharacter.trim()) {
+                    alert("Morate uneti ime lika za glumca!");
+                    return;
+                }
                 await assignUserToMovie(
                   token + "",
                   movieId + "",
@@ -247,8 +319,7 @@ export default function TeamPage() {
                 );
                 const updated = await getUsersForMovie(token + "", movieId + "");
                 setUsers(updated.users);
-                const free = await getFREEUsersForMovie(token + "", movieId + "");
-                setFreeUsers(free.users);
+                setFreeUsers([]);
                 setConfirmUser(null);
                 setOpenPopupRole(null);
                 setActorCharacter("");
@@ -259,6 +330,51 @@ export default function TeamPage() {
             <button
               className="no-btn"
               onClick={() => setConfirmUser(null)}
+            >
+              ❌ Ne
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🆕 DELETE confirmation popup */}
+      {deleteConfirm && (
+        <div className="popup-confirm">
+          <p>
+            Sigurni ste da želite da izbrišete korisnika{" "}
+            <b>
+              {deleteConfirm.user.name} {deleteConfirm.user.lastName}
+            </b>{" "}
+            sa uloge?
+          </p>
+          <div className="popup-buttons">
+            <button
+              className="yes-btn"
+              onClick={async () => {
+                if (!token) return;
+                try {
+                  setRemovingId(deleteConfirm.user._id);
+                  await removeUserFromMovie(
+                    token + "",
+                    movieId + "",
+                    deleteConfirm.user._id,
+                    deleteConfirm.role
+                  );
+                  const updated = await getUsersForMovie(token + "", movieId + "");
+                  setUsers(updated.users);
+                } catch (err) {
+                  console.error("Error deleting user:", err);
+                } finally {
+                  setRemovingId(null);
+                  setDeleteConfirm(null);
+                }
+              }}
+            >
+              ✅ Da
+            </button>
+            <button
+              className="no-btn"
+              onClick={() => setDeleteConfirm(null)}
             >
               ❌ Ne
             </button>

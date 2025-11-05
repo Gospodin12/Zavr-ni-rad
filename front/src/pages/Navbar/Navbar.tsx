@@ -1,27 +1,24 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getUserInfo } from "../../services/authService";
 import "./Navbar.css";
-import { useParams } from 'react-router-dom';
+
 import logoDirector from "../../assets/LogosNBack/klapa.webp";
 import logoActor from "../../assets/LogosNBack/glumaLogo.png";
 import logoSnimatelj from "../../assets/LogosNBack/camera-icon-21.png";
 import logoScenograf from "../../assets/LogosNBack/scenographyLogo.png";
 import logoEdit from "../../assets/LogosNBack/edit.png";
-import { getUserRoleForMovie } from "../../services/movieService"; // ✅ import your new function
 
-interface User {
-  name: string;
-  lastName: string;
-  email: string;
-  role: number;
-}
+import { getAllUserRolesForMovie, getMAINUserRoleForMovie, getUserRoleForMovie } from "../../services/movieService";
+import type { User } from "../../models/User";
 
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
-  const [logo, setLogo] = useState<string>("");
+  const [roles, setRoles] = useState<number[]>([]);
+  const [logo, setLogo] = useState<string>();
   const { movieId } = useParams();
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [role, setRole] = useState<number>();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -29,44 +26,41 @@ export default function Navbar() {
       navigate("/login");
       return;
     }
-    
+
     getUserInfo(token)
-        .then((data) => {
-          getUserRoleForMovie(token,movieId+'').then(data2 =>{
-          data.role = data2.role
+      .then(async (data) => {
+          const mainRole = await getMAINUserRoleForMovie(token,movieId+"")
           setUser(data);
-          switch (data.role) {
-            case 1:
-              setLogo(logoDirector);
-              break;
-            case 2:
-              setLogo(logoActor);
-              break;
-            case 3:
-              setLogo(logoSnimatelj);
-              break;
-            case 4:
-              setLogo(logoScenograf);
-              break;
-            default:
-              setLogo(logoEdit);
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to load user info:", err);
-          if (err.response?.status === 401) {
-            localStorage.removeItem("token");
-            navigate("/login");
-          }
-        });
-    })
-  }, [navigate]);
+          console.log(mainRole)
+
+          if(mainRole==1)
+            setLogo(logoDirector)
+          else if(mainRole==2)
+            setLogo(logoActor)
+          else if(mainRole==3)
+            setLogo(logoSnimatelj)
+          else if(mainRole==4)
+            setLogo(logoScenograf)
+          else
+            setLogo(logoEdit)
+          
+          setRole(mainRole)
+      })
+      .catch((err) => {
+        console.error("Failed to load user info:", err);
+        if (err.response?.status === 401) {
+          localStorage.removeItem("token");
+          navigate("/login");
+        }
+      });
+  }, [movieId, navigate]);
 
   const handleLogout = () => {
     navigate("/film");
   };
 
-  const getNavbarItems = (role: number): string[] => {
+  // Available menu items per role
+  const getNavbarItemsForRole = (): string[] => {
     switch (role) {
       case 1:
         return [
@@ -87,16 +81,28 @@ export default function Navbar() {
     }
   };
 
+
+
+
   return (
     <nav className="sidebar">
-      {logo && <img src={logo} onClick={ () => navigate(`/${movieId}/home`)} alt="Logo" className="sidebar-logo" />}
+      {logo && (
+        <img
+          src={logo}
+          onClick={() => navigate(`/${movieId}/home`)}
+          alt="Logo"
+          className="sidebar-logo"
+        />
+      )}
 
       <ul className="sidebar-menu">
         {user &&
-          getNavbarItems(user.role).map((item) => (
+          getNavbarItemsForRole().map((item) => (
             <li
               key={item}
-              onClick={() => navigate(`/${movieId}/${item.toLowerCase().replace(" ", "-")}`)}
+              onClick={() =>
+                navigate(`/${movieId}/${item.toLowerCase().replace(" ", "-")}`)
+              }
             >
               {item}
             </li>

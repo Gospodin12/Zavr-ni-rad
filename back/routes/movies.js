@@ -62,18 +62,54 @@ router.get(
   passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     try {
-      const roles = await UserRoleFilms.find({
-        userId: req.user._id,
-        role: 1,
-      }).populate("movieId");
+      const roles = await UserRoleFilms.aggregate([
+        {
+          // 1. Filtriraj po korisniku i ulozi: 1
+          $match: {
+            userId: req.user._id,
+            role: 1,
+          },
+        },
+        {
+          // 2. Grupiši po movieId da bi filmovi bili jedinstveni
+          $group: {
+            _id: "$movieId",
+            roles: {
+              $push: {
+                role: "$role",
+                character: "$CharacterIfActor",
+              },
+            },
+          },
+        },
+        {
+          // 3. Poveži sa 'movies' kolekcijom
+          $lookup: {
+            from: Movie.collection.name,
+            localField: "_id",
+            foreignField: "_id",
+            as: "movieDetails",
+          },
+        },
+        {
+          $unwind: "$movieDetails",
+        },
+        {
+          // **NOVA FAZA:** Sortiranje po _id filma (opadajuće: -1)
+          $sort: { "movieDetails._id": -1 } // ili 1 za rastuće, ili po nekom drugom polju (npr. "movieDetails.name": 1)
+        },
+        {
+          // 5. Preoblikuj izlaz
+          $project: {
+            _id: 0,
+            movie: "$movieDetails",
+            role: { $arrayElemAt: ["$roles.role", 0] },
+            character: { $arrayElemAt: ["$roles.character", 0] },
+          },
+        },
+      ]);
 
-      const result = roles.map((r) => ({
-        movie: r.movieId,
-        role: r.role,
-        character: r.CharacterIfActor || null,
-      }));
-
-      res.json({ success: true, movies: result });
+      res.json({ success: true, movies: roles }); // 'roles' je sada već formatiran rezultat
     } catch (error) {
       console.error(error);
       res.status(500).json({ success: false, message: "Error fetching my movies" });
@@ -81,27 +117,63 @@ router.get(
   }
 );
 
-
 router.get(
   "/not-my-movies",
   passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     try {
-      const roles = await UserRoleFilms.find({
-        userId: req.user._id,
-        role: { $ne: 1 },
-      }).populate("movieId");
+      const roles = await UserRoleFilms.aggregate([
+        {
+          // 1. Filtriraj po korisniku i ulozi != 1
+          $match: {
+            userId: req.user._id,
+            role: { $ne: 1 },
+          },
+        },
+        {
+          // 2. Grupiši po movieId da bi filmovi bili jedinstveni
+          $group: {
+            _id: "$movieId",
+            roles: {
+              $push: {
+                role: "$role",
+                character: "$CharacterIfActor",
+              },
+            },
+          },
+        },
+        {
+          // 3. Poveži sa 'movies' kolekcijom
+          $lookup: {
+            from: Movie.collection.name,
+            localField: "_id",
+            foreignField: "_id",
+            as: "movieDetails",
+          },
+        },
+        {
+          $unwind: "$movieDetails",
+        },
+        {
+          // **NOVA FAZA:** Sortiranje po _id filma (opadajuće: -1)
+          $sort: { "movieDetails._id": -1 } // ili po nekom drugom polju
+        },
+        {
+          // 5. Preoblikuj izlaz (vraćamo array uloga za svaki film)
+          $project: {
+            _id: 0,
+            movie: "$movieDetails",
+            roles: "$roles",
+          },
+        },
+      ]);
 
-      const result = roles.map((r) => ({
-        movie: r.movieId,
-        role: r.role,
-        character: r.CharacterIfActor || null,
-      }));
-
-      res.json({ success: true, movies: result });
+      res.json({ success: true, movies: roles });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ success: false, message: "Error fetching not-my-movies" });
+      res
+        .status(500)
+        .json({ success: false, message: "Error fetching not-my-movies" });
     }
   }
 );
@@ -182,22 +254,27 @@ router.get(
 // --- add near top with other requires ---
 
 
-// --- GET users not yet assigned to this movie ---
+// ✅ GET users available for a specific role (can have other roles, just not this one)
 router.get(
   "/:id/available-users",
   passport.authenticate("jwt", { session: false }),
   async (req, res) => {
     try {
       const movieId = req.params.id;
+      const { role } = req.query; // e.g. ?role=3 or ?role=2
 
-      // all users
       const allUsers = await User.find({}, "name lastName email picture phoneNumber").lean();
 
-      // users already assigned to movie
-      const assigned = await UserRoleFilms.find({ movieId }).select("userId").lean();
-      const assignedIds = new Set(assigned.map((a) => String(a.userId)));
+      let assigned = [];
+      if (role) {
+        // exclude only users who already have THIS role for this movie
+        assigned = await UserRoleFilms.find({ movieId, role: Number(role) }).select("userId").lean();
+      } else {
+        // fallback: exclude none
+        assigned = [];
+      }
 
-      // filter
+      const assignedIds = new Set(assigned.map((a) => String(a.userId)));
       const available = allUsers.filter((u) => !assignedIds.has(String(u._id)));
 
       res.json({ success: true, users: available });
@@ -207,6 +284,7 @@ router.get(
     }
   }
 );
+
 
 // --- POST assign user to movie with role (and optional character) ---
 router.post(
@@ -225,12 +303,6 @@ router.post(
       const movie = await Movie.findById(movieId);
       if (!movie) return res.status(404).json({ success: false, message: "Movie not found" });
 
-      // prevent duplicate assignment (optional)
-      const exists = await UserRoleFilms.findOne({ movieId, userId });
-      if (exists) {
-        return res.status(400).json({ success: false, message: "User already assigned to this movie" });
-      }
-
       const newUserRole = await UserRoleFilms.create({
         movieId,
         userId,
@@ -245,5 +317,135 @@ router.post(
     }
   }
 );
+
+// ✅ Get all roles a user has on a specific movie
+router.get(
+  "/:id/my-roles",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const roles = await UserRoleFilms.find({
+        movieId: req.params.id,
+        userId: req.user._id,
+      });
+
+      if (!roles || roles.length === 0) {
+        return res.json({ success: true, roles: [] });
+      }
+
+      const formatted = roles.map((r) => ({
+        role: r.role,
+        character: r.CharacterIfActor || null,
+      }));
+
+      res.json({ success: true, roles: formatted });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error fetching all user roles" });
+    }
+  }
+);
+
+
+// ✅ Get all roles for ANY user on a specific movie
+router.get(
+  "/:id/user/:userId/roles",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const { id: movieId, userId } = req.params;
+
+      const roles = await UserRoleFilms.find({ movieId, userId });
+
+      if (!roles || roles.length === 0) {
+        return res.json({ success: true, roles: [] });
+      }
+
+      const formatted = roles.map((r) => ({
+        role: r.role,
+        character: r.CharacterIfActor || null,
+      }));
+
+      res.json({ success: true, roles: formatted });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching roles for specified user",
+      });
+    }
+  }
+);
+
+// POST remove a user-role from movie (can't remove director role = 1)
+router.post(
+  "/:id/remove-role",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const movieId = req.params.id;
+      const { userId, role } = req.body;
+
+      if (!userId || role === undefined || role === null) {
+        return res
+          .status(400)
+          .json({ success: false, message: "userId and role are required" });
+      }
+
+      // Prevent removing director
+      if (Number(role) === 1) {
+        return res
+          .status(403)
+          .json({ success: false, message: "Director cannot be removed" });
+      }
+
+      // check movie exists
+      const movie = await Movie.findById(movieId);
+      if (!movie) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Movie not found" });
+      }
+
+      // Delete matching role document(s). If multiple entries exist, remove all that match movie+user+role.
+      const deleteResult = await UserRoleFilms.deleteMany({
+        movieId,
+        userId,
+        role: Number(role),
+      });
+
+      if (deleteResult.deletedCount === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Role not found for that user" });
+      }
+
+      // Optionally return updated user list
+      const userRoles = await UserRoleFilms.find({ movieId })
+        .populate("userId", "name lastName email picture phoneNumber")
+        .lean();
+      const users = userRoles.map((ur) => ({
+        user: ur.userId,
+        role: ur.role,
+        character: ur.CharacterIfActor || null,
+      }));
+
+      res.json({
+        success: true,
+        message: "User role(s) removed",
+        removedCount: deleteResult.deletedCount,
+        users,
+      });
+    } catch (error) {
+      console.error("Error in remove-role:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error removing user role" });
+    }
+  }
+);
+
 
 module.exports = router;

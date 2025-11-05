@@ -1,8 +1,6 @@
 import './App.css'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import LoginPage from './pages/LoginPage/LoginPage'
-import PdfWordViewerPage from './pages/PdfWordViewerPage'
-import MarkedPage from './pages/MarkedPage'
 import HomePage from './pages/HomePage/HomePage'
 import ScenarioPage from './pages/ScenarioPage/ScenarioPage'
 import NotePage from './pages/NotePage/NotePage'
@@ -13,6 +11,7 @@ import MoviePage from './pages/MoviePage/MoviePage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
 import AllNotePage from './pages/AllNotesPage/AllNotePage'
 import ASpecificNotePage from './pages/ASpecificNotePage/ASpecificNotePage'
+import CreditsPage from './pages/CreditsPage/CreditsPage'
 /*
 function App() {
   const [count, setCount] = useState(0)
@@ -61,11 +60,7 @@ function App() {
         <Route path="/:movieId/register" element={<RegisterPage />} />
         <Route path="/:movieId/beleske" element={<AllNotePage />} />
         <Route path="/:movieId/beleska/:noteId" element={<ASpecificNotePage />} />
-        <Route path="/:movieId/credits" element={<ASpecificNotePage />} />
-
-
-        <Route path="/:movieId/viewer" element={<PdfWordViewerPage />} />
-        <Route path="/marked" element={<MarkedPage />} />
+        <Route path="/:movieId/credits" element={<CreditsPage />} />
 
       </Routes>
     </BrowserRouter>

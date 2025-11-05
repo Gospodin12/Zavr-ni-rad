@@ -13,7 +13,7 @@ export interface AddMovieResponse {
   };
 }
 
-/** 🧩 Get all movies for logged-in user */
+
 export async function getMyMovies(token: string) {
   const response = await axios.get(`${API_URL}/my-movies`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -73,8 +73,12 @@ export async function getUsersForMovie(token: string, movieId: string) {
 }
 
 
-export async function getFREEUsersForMovie(token: string, movieId: string) {
-  const response = await axios.get(`${API_URL}/${movieId}/available-users`, {
+export async function getFREEUsersForMovie(token: string, movieId: string, role?: number) {
+  const url = role
+    ? `${API_URL}/${movieId}/available-users?role=${role}`
+    : `${API_URL}/${movieId}/available-users`;
+
+  const response = await axios.get(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -101,3 +105,64 @@ export async function assignUserToMovie(
   return response.data;
 }
 
+export async function getAllUserRolesForMovie(token: string, movieId: string) {
+  const response = await axios.get(`${API_URL}/${movieId}/my-roles`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+} 
+
+
+export async function getMAINUserRoleForMovie(token: string, movieId: string) {
+    const ROLE_PRIORITY_ORDER = [1, 5, 3, 2, 4];
+    const response = await axios.get(`${API_URL}/${movieId}/my-roles`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+    const roles: { role: number, character: string }[] = response.data.roles || [];
+
+    if (roles.length === 0) {
+        return 0; 
+    }
+
+    for (const priority of ROLE_PRIORITY_ORDER) {
+        const foundRole = roles.find(roleObj => roleObj.role === priority);
+
+        if (foundRole) {
+            const mainRole = foundRole.role;
+            return mainRole;
+        }
+    }
+    console.log("No prioritized role (1, 5, 3, 2, 4) found.");
+    return 0;
+}
+
+export async function getUserRolesForMovie(
+  token: string,
+  movieId: string,
+  userId: string
+) {
+  const response = await axios.get(`${API_URL}/${movieId}/user/${userId}/roles`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+}
+
+
+export async function removeUserFromMovie(
+  token: string,
+  movieId: string,
+  userId: string,
+  role: number
+) {
+  const response = await axios.post(
+    `${API_URL}/${movieId}/remove-role`,
+    { userId, role },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return response.data;
+}

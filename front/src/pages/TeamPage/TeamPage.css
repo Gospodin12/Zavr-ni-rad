@@ -29,11 +29,11 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(14px);
   border-radius: 20px;
-  width: 700px;
   min-width: 400px;
   padding: 25px 30px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   transition: 0.3s ease;
+  width: 500px;
   
 }
 .team-card:hover {
@@ -56,15 +56,15 @@
 }
 
 .add-btn {
-  background: #c6c6c6c8;
+  background: #ff914d;
   color: white;
   border: none;
-  
+  width: 60px;
   cursor: pointer;
   transition: 0.2s;
 }
 .add-btn:hover {
-  background: #949494;
+  background: #ff4411;
   color: #ffffff;
   transform: scale(1.1);
 }
@@ -106,7 +106,7 @@
 
 .popup-window {
   position: absolute;
-  
+  top:100px;
   right: 100px;
   background: #ffffff;
   border: 1px solid #e7e7e7;
@@ -138,11 +138,18 @@
 }
 .left-move-margin{
   margin-left: 40px;
+  position: relative;
+  right:38px;
+}
+.right-move-margin{
+  margin-left:0px;
+  position: relative;
+  right: 35px;
 }
 .button-close-pop {
   width: 100%;
   margin-top: 10px;
-  background: #ff4411;
+  background: #ff914d;
   border: none;
   color: white;
   border-radius: 6px;
@@ -151,7 +158,8 @@
   transition: 0.2s;
 }
 .button-close-pop:hover {
-  background: #ff914d;
+    background: #ff4411;
+
 }
 
 .popup-confirm {
@@ -199,19 +207,21 @@
   font-weight: 600;
   transition: 0.2s;
 }
+
+
 .yes-btn {
-  background: #adadad;
+  background: #ff914d;
   color: white;
 }
 .no-btn {
-  background: #adadad;
-  color: white;
+  background: #ff914d;
+    color: white;
 }
 .yes-btn:hover {
-  background: #7b7b7b;
+  background: #ff4411;
 }
 .no-btn:hover {
-  background: #7b7b7b;
+  background: #ff4411;
 }
 
 .bottom-buttons {
@@ -243,4 +253,43 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+.popup-search {
+  width: 233px;
+  margin-bottom: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 14px;
+}
+.popup-search:focus {
+  border-color: #ff914d;
+  box-shadow: 0 0 5px rgba(255, 145, 77, 0.4);
+}
+button .delete-button{
+
+  border: none;
+}
+.popup-search {
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.remove-btn {
+  margin-left: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.remove-btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  float: right;
+}
+
+.role-section{
+  margin-bottom: 60px;
 }

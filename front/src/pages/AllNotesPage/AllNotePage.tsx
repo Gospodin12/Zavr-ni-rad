@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "../Navbar/Navbar";
 import { noteService } from "../../services/noteService";
-import { getMovieById } from "../../services/movieService";
+import { getMovieById, getUserRoleForMovie } from "../../services/movieService";
 import "./AllNotePage.css";
 import { backgroundService } from "../../services/backgroundService";
 
@@ -11,6 +11,7 @@ export default function AllNotePage() {
   const [notes, setNotes] = useState<any[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<any[]>([]);
   const [movie, setMovie] = useState<any>(null);
+  const [userRoles, setUserRoles] = useState<number[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -18,6 +19,14 @@ export default function AllNotePage() {
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
+  const ROLE_CATEGORIES: Record<number, string[]> = {
+    1: ["Scenario", "Rezija", "Gluma", "Snimanje", "Montaza", "Scenografija"],
+    2: ["Scenario", "Gluma"],
+    3: ["Scenario", "Snimanje", "Scenografija"],
+    4: ["Scenario", "Scenografija"],
+    5: ["Scenario", "Montaza", "Snimanje"],
+  };
 
   const getPriorityClass = (priority: string) => {
     if (priority?.toLowerCase().includes("high")) return "priority-critical";
@@ -37,26 +46,32 @@ export default function AllNotePage() {
     return "Manje bitno";
   };
 
-
-
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
       return;
-    }  
-    backgroundService.changeBackgroundPerUser(token,movieId,navigate)
+    }
+
+    backgroundService.changeBackgroundPerUser(token, movieId, navigate);
 
     async function fetchData() {
       if (!token) return;
-      console.log(234324)
-      const movieData = await getMovieById(token + "",movieId+"");
-      setMovie(movieData);
-      
-      const data = await noteService.getMyNotes(token, movieId);
-      console.log(data)
-      setNotes(data.notes);
-      setFilteredNotes(data.notes);
+      try {
+        const movieData = await getMovieById(token + "", movieId + "");
+        setMovie(movieData);
+
+        const rolesData = await getUserRoleForMovie(token, movieId + "");
+        const roles = Array.isArray(rolesData)
+          ? rolesData.map((r: any) => r.role)
+          : [rolesData.role];
+        setUserRoles(roles);
+
+        const data = await noteService.getMyNotes(token, movieId);
+        setNotes(data.notes);
+        setFilteredNotes(data.notes);
+      } catch (err) {
+        console.error("❌ Error loading notes or roles:", err);
+      }
     }
 
     fetchData();
@@ -65,6 +80,17 @@ export default function AllNotePage() {
   // ✅ Filter logic
   useEffect(() => {
     let filtered = notes;
+
+    // Only categories allowed by user roles
+    const allowedCategories = Array.from(
+      new Set(userRoles.flatMap((r) => ROLE_CATEGORIES[r] || []))
+    );
+
+    filtered = filtered.filter(
+      (n) =>
+        allowedCategories.includes(n.category) ||
+        allowedCategories.length === 0 // fallback for admins or undefined
+    );
 
     if (searchTerm.trim() !== "") {
       filtered = filtered.filter(
@@ -85,15 +111,18 @@ export default function AllNotePage() {
     }
 
     setFilteredNotes(filtered);
-  }, [searchTerm, filterCategory, filterPriority, notes]);
+  }, [searchTerm, filterCategory, filterPriority, notes, userRoles]);
+
+  // ✅ Dropdown options only for allowed categories
+  const allowedCategories = Array.from(
+    new Set(userRoles.flatMap((r) => ROLE_CATEGORIES[r] || []))
+  );
 
   return (
     <div className="all-notes-container">
       <Navbar />
 
       <div className="notes-section-all">
-
-
         <h1 className="notes-title-all">Sve beleške</h1>
 
         {/* ✅ Filter Bar */}
@@ -110,12 +139,11 @@ export default function AllNotePage() {
             onChange={(e) => setFilterCategory(e.target.value)}
           >
             <option value="">Sve kategorije</option>
-            <option value="Scenario">Scenario</option>
-            <option value="Rezija">Režija</option>
-            <option value="Gluma">Gluma</option>
-            <option value="Snimanje">Snimanje</option>
-            <option value="Montaza">Montaža</option>
-            <option value="Scenografija">Scenografija</option>
+            {allowedCategories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
           </select>
 
           <select
@@ -135,7 +163,7 @@ export default function AllNotePage() {
             <div
               key={note._id}
               className={`note-card-all ${getPriorityClass(note.priority)}`}
-              onClick={() => navigate(`/${movieId}/beleska/` + note._id )}
+              onClick={() => navigate(`/${movieId}/beleska/${note._id}`)}
             >
               <img
                 src={note.createdBy?.picture || "https://via.placeholder.com/100"}
@@ -146,13 +174,13 @@ export default function AllNotePage() {
                 <h3>{note.title}</h3>
                 <p>{note.description}</p>
                 <small className="Autor-note-all">
-                 <strong>Kategorija: </strong>{note.category}  <strong className="AutorRight">
-                    Autor:
-                    </strong> {note.createdBy?.name} {note.createdBy?.lastName}
+                  <strong>Kategorija:</strong> {note.category}
+                  <strong className="AutorRight">Autor:</strong>{" "}
+                  {note.createdBy?.name} {note.createdBy?.lastName}
                 </small>
               </div>
-              <div className={`priority-class-all`}>
-                <div className={`${getPriorityTextClass(note.priority)}`}>
+              <div className="priority-class-all">
+                <div className={getPriorityTextClass(note.priority)}>
                   <h5>Prioritet:</h5>
                   <p>{getPriorityText(note.priority)}</p>
                 </div>
@@ -161,7 +189,9 @@ export default function AllNotePage() {
           ))}
 
           {filteredNotes.length === 0 && (
-            <p className="p">Nema beleški koje odgovaraju filterima.</p>
+            <p className="no-notes-message">
+              Nema beleški koje odgovaraju filterima.
+            </p>
           )}
         </div>
       </div>

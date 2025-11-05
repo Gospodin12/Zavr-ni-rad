@@ -1,67 +1,116 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import "./MoviePage.css";
 import { useNavigate } from "react-router-dom";
 import pozadina from "../../assets/movies1.jpg";
 import { getUserInfo } from "../../services/authService";
-import { getMyMovies, addMovie,getNotMyMovies } from "../../services/movieService";
+import {
+  getMyMovies,
+  addMovie,
+  getNotMyMovies,
+  getAllUserRolesForMovie,
+} from "../../services/movieService";
 import emptyPicture from "../../assets/noUser.png";
 import noPictureMovie from "../../assets/noMovie.avif";
-
 import type { User } from "../../models/User";
-import type { MovieRole } from "../../models/MovieRole";
 import { backgroundService } from "../../services/backgroundService";
+
+
+type MovieData = {
+  movie: {
+    _id: string;
+    name: string;
+    picture?: string;
+  };
+  roles?: { role: number; character?: string }[];
+};
+
+const ROLE_NAMES: Record<number, string> = {
+  1: "🎬 Režiser",
+  2: "🎭 Glumac",
+  3: "🎥 Snimatelj",
+  4: "🎨 Scenograf",
+  5: "✂️ Montažer",
+};
+
+const getRole = (role: number) => {
+  const isDirector = role === 1;
+
+  // Stilizovani objekat koji sadrži boju
+  const style = {
+    color: isDirector ? "green" : "red",
+    fontWeight: "bold", // Opcionalno, za bolju vidljivost
+  };
+
+  return (
+    <span style={style}>
+      {isDirector ? "DA" : "NE"}
+    </span>
+  );
+};
 
 const MoviePage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [movies, setMovies] = useState<MovieRole[]>([]);
-  const [movies2, setMovies2] = useState<MovieRole[]>([]);
-
+  const [movies, setMovies] = useState<MovieData[]>([]);
+  const [movies2, setMovies2] = useState<MovieData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const [searchMyMovies, setSearchMyMovies] = useState("");
+  const [searchOtherMovies, setSearchOtherMovies] = useState("");
+  const [filterRoleMy, setFilterRoleMy] = useState<number | "">("");
+  const [filterRoleOther, setFilterRoleOther] = useState<number | "">("");
+
   const [newMovie, setNewMovie] = useState({
     name: "",
     description: "",
     picture: null as File | null,
     preview: "",
   });
-    const [newMovie2, setNewMovie2] = useState({
-    name: "",
-    description: "",
-    picture: null as File | null,
-    preview: "",
-  });
+
   const navigate = useNavigate();
-  const scrollRef = useRef<HTMLDivElement | null>(null);
   const token = localStorage.getItem("token");
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-  useEffect(() => {
-    backgroundService.changeBackground(pozadina)
-    return () => {
-      backgroundService.cleanBackground()
-    };
-  }, []);
 
   useEffect(() => {
+    backgroundService.changeBackground(pozadina);
+
     const fetchData = async () => {
       if (!token) return navigate("/login");
+
       try {
         const userData = await getUserInfo(token);
         setUser(userData);
 
-        const movieData = await getMyMovies(token);
-        setMovies(movieData);
+        const myMovies = await getMyMovies(token);
+        const notMyMovies = await getNotMyMovies(token);
 
-        const movieData2 = await getNotMyMovies(token);
-        setMovies2(movieData2);
+        // Fetch all roles for each movie in parallel
+        const myMoviesWithRoles = await Promise.all(
+          myMovies.map(async (m: any) => {
+            const rolesData = await getAllUserRolesForMovie(token, m.movie._id);
+            return { ...m, roles: rolesData.roles || [] };
+          })
+        );
+
+        const notMyMoviesWithRoles = await Promise.all(
+          notMyMovies.map(async (m: any) => {
+            const rolesData = await getAllUserRolesForMovie(token, m.movie._id);
+            return { ...m, roles: rolesData.roles || [] };
+          })
+        );
+
+        const filteredOthers = notMyMoviesWithRoles.filter(
+          (m) => !myMoviesWithRoles.some((mm) => mm.movie._id === m.movie._id)
+        );
+
+        setMovies(myMoviesWithRoles);
+        setMovies2(filteredOthers);
       } catch (err) {
         console.error("Greška:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [token, navigate]);
 
@@ -77,8 +126,7 @@ const MoviePage: React.FC = () => {
         newMovie.picture || undefined
       );
       setShowAddModal(false);
-      setNewMovie({ name: "", description: "", picture: null, preview: "" });     
-
+      setNewMovie({ name: "", description: "", picture: null, preview: "" });
       navigate(`/${created.movie._id}/home/`);
     } catch (err) {
       console.error("Greška pri dodavanju filma:", err);
@@ -86,65 +134,30 @@ const MoviePage: React.FC = () => {
     }
   };
 
-  const getRoleName = (role: number) => {
-    switch (role) {
-      case 1:
-        return "🎬 Režiser";
-      default:
-        return "Nije Režiser";
-    }
+  const getRolesText = (roles?: { role: number; character?: string }[]) => {
+    if (!roles || roles.length === 0) return "Bez uloge";
+    return roles.map((r) => ROLE_NAMES[r.role] || `Uloga ${r.role}`).join(", ");
   };
 
-useEffect(() => {
-  const setupDragScroll = (container: HTMLDivElement) => {
-    let isDown = false;
-    let startX: number;
-    let scrollLeft: number;
-
-    const onMouseDown = (e: MouseEvent) => {
-      isDown = true;
-      startX = e.pageX - container.offsetLeft;
-      scrollLeft = container.scrollLeft;
-      container.classList.add("active");
-    };
-
-    const onMouseLeave = () => {
-      isDown = false;
-      container.classList.remove("active");
-    };
-
-    const onMouseUp = () => {
-      isDown = false;
-      container.classList.remove("active");
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - container.offsetLeft;
-      const walk = (x - startX) * 1.5; // scroll speed
-      container.scrollLeft = scrollLeft - walk;
-    };
-
-    container.addEventListener("mousedown", onMouseDown);
-    container.addEventListener("mouseleave", onMouseLeave);
-    container.addEventListener("mouseup", onMouseUp);
-    container.addEventListener("mousemove", onMouseMove);
-
-    return () => {
-      container.removeEventListener("mousedown", onMouseDown);
-      container.removeEventListener("mouseleave", onMouseLeave);
-      container.removeEventListener("mouseup", onMouseUp);
-      container.removeEventListener("mousemove", onMouseMove);
-    };
-  };
-
-  // apply to all carousels
-  document.querySelectorAll(".movies-carousel").forEach((el) => {
-    setupDragScroll(el as HTMLDivElement);
+  const filteredMyMovies = movies.filter((m) => {
+    const matchSearch = m.movie.name
+      .toLowerCase()
+      .includes(searchMyMovies.toLowerCase());
+    const matchRole =
+      !filterRoleMy ||
+      m.roles?.some((r) => r.role === filterRoleMy);
+    return matchSearch && matchRole;
   });
-}, []);
 
+  const filteredOtherMovies = movies2.filter((m) => {
+    const matchSearch = m.movie.name
+      .toLowerCase()
+      .includes(searchOtherMovies.toLowerCase());
+    const matchRole =
+      !filterRoleOther ||
+      m.roles?.some((r) => r.role === filterRoleOther);
+    return matchSearch && matchRole;
+  });
 
   if (loading) return <div className="movie-page-loading">Učitavanje...</div>;
 
@@ -153,42 +166,80 @@ useEffect(() => {
       <div className="app-header">
         <div className="app-description">
           <h1>🎥 ScriptShaper</h1>
-          <p>Vaši Filmski Projekti: Lakoća, Elegancija i Potpuna Kontrola 
-            Stvorite. Oblikujte. Upravljajte. Bez Napora. Oslobodite svoju kreativnost i 
-            pretvorite svoje vizije u filmove uz intuitivni sistem dizajniran da pojednostavi i 
-            uzdigne svaki aspekt vašeg filmskog projekta, od prve iskre ideje do završne premijere.
-        </p>
-
-</div>
-
-
+          <p>
+            Stvorite. Oblikujte. Upravljajte. Oslobodite svoju kreativnost i
+            pretvorite svoje vizije u filmove uz intuitivni sistem koji
+            pojednostavljuje svaki korak.
+          </p>
+        </div>
       </div>
-        {user && (
-          <div className="user-card-movie">
-            <img
-              src={user.picture ? user.picture : emptyPicture}
-              alt={`${user.name} ${user.lastName}`}
-              className="user-photo-large-movie"
-            />
-            <h3>
-              {user.name} {user.lastName}
-            </h3>
-            <p><strong>Email:</strong> {user.email}</p>
-            {user.phoneNumber && <p><strong>Telefon:</strong> {user.phoneNumber}</p>}
-            <p><strong>Uloga:</strong> {getRoleName(user.role)}</p>
-            <button onClick={handleLogout}  className="logout-movie-page">Odjavi se</button>
-          </div>
-        )}
+
+      {user && (
+        <div className="user-card-movie">
+          <img
+            src={user.picture ? user.picture : emptyPicture}
+            alt={`${user.name} ${user.lastName}`}
+            className="user-photo-large-movie"
+          />
+          <h3>
+            {user.name} {user.lastName}
+          </h3>
+          <p>
+            <strong>Email:</strong> {user.email}
+          </p>
+          {user.phoneNumber && (
+            <p>
+              <strong>Telefon:</strong> {user.phoneNumber}
+            </p>
+          )}
+          <p>
+            <strong>Režiser:</strong> {getRole(user.role)}
+          </p>
+          <button onClick={() => 
+          {
+            localStorage.clear()
+            navigate("/login")
+          }
+            } className="logout-movie-page">
+            Vrati se
+          </button>
+        </div>
+      )}
+
+      {/* 🎬 MY MOVIES */}
       <div className="movies-section">
         <h2 className="movies-title">🎬 Vaši filmovi</h2>
+        <div className="filter-group">
+          <input
+            type="text"
+            className="search-bar-movies"
+            placeholder="🔍 Pretraži filmove..."
+            value={searchMyMovies}
+            onChange={(e) => setSearchMyMovies(e.target.value)}
+          />
+          <select
+            className="role-filter"
+            value={filterRoleMy}
+            onChange={(e) =>
+              setFilterRoleMy(e.target.value ? Number(e.target.value) : "")
+            }
+          >
+            <option value="">Sve uloge</option>
+            {Object.entries(ROLE_NAMES).map(([num, name]) => (
+              <option key={num} value={num}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="movies-carousel-wrapper">
-        <div className="movies-carousel" ref={scrollRef}>
-          {movies.length === 0 ? (
-            <p className="no-movies-text">Još uvek nemate nijedan film.</p>
+        <div className="movies-carousel">
+          {filteredMyMovies.length === 0 ? (
+            <p className="no-movies-text">Nema filmova.</p>
           ) : (
-            movies.map((item) => (
+            filteredMyMovies.map((item) => (
               <div
                 className="movie-tile"
                 key={item.movie._id}
@@ -204,7 +255,7 @@ useEffect(() => {
                 />
                 <div className="movie-info-overlay">
                   <h3>{item.movie.name}</h3>
-                  <p>{getRoleName(item.role)}</p>
+                  <p>{getRolesText(item.roles)}</p>
                 </div>
               </div>
             ))
@@ -212,21 +263,49 @@ useEffect(() => {
         </div>
 
         {user?.role === 1 && (
-          <button className="add-movie-btn next-to-cards" onClick={() => setShowAddModal(true)}>
+          <button
+            className="add-movie-btn next-to-cards"
+            onClick={() => setShowAddModal(true)}
+          >
             +
           </button>
         )}
       </div>
+
+      {/* 🎥 OTHER MOVIES */}
       <div className="movies-section">
-        <h2 className="movies-title">🎬 Tuđi filmovi</h2>
+        <h2 className="movies-title">🎥 Tuđi filmovi</h2>
+        <div className="filter-group-movies2">
+          <input
+            type="text"
+            className="search-bar-movies"
+            placeholder="🔍 Pretraži filmove..."
+            value={searchOtherMovies}
+            onChange={(e) => setSearchOtherMovies(e.target.value)}
+          />
+          <select
+            className="role-filter"
+            value={filterRoleOther}
+            onChange={(e) =>
+              setFilterRoleOther(e.target.value ? Number(e.target.value) : "")
+            }
+          >
+            <option value="">Sve uloge</option>
+            {Object.entries(ROLE_NAMES).map(([num, name]) => (
+              <option key={num} value={num}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="movies-carousel-wrapper">
-        <div className="movies-carousel" ref={scrollRef}>
-          {movies2.length === 0 ? (
-            <p className="no-movies-text">Još uvek nemate nijedan film.</p>
+        <div className="movies-carousel">
+          {filteredOtherMovies.length === 0 ? (
+            <p className="no-movies-text">Nema filmova.</p>
           ) : (
-            movies2.map((item) => (
+            filteredOtherMovies.map((item) => (
               <div
                 className="movie-tile"
                 key={item.movie._id}
@@ -242,67 +321,78 @@ useEffect(() => {
                 />
                 <div className="movie-info-overlay">
                   <h3>{item.movie.name}</h3>
-                  <p>{getRoleName(item.role)}</p>
+                  <p>{getRolesText(item.roles)}</p>
                 </div>
               </div>
             ))
           )}
         </div>
-
       </div>
+
+      {/* Add Movie Modal */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal modern">
             <h2>🎬 Novi film</h2>
             <form onSubmit={handleAddMovie} className="add-movie-form">
-            <div className="poster-upload">
+              <div className="poster-upload">
                 <label htmlFor="movie-picture" className="poster-label">
-                {newMovie.preview ? (
-                    <img src={newMovie.preview} alt="Preview" className="poster-preview" />
-                ) : (
+                  {newMovie.preview ? (
+                    <img
+                      src={newMovie.preview}
+                      alt="Preview"
+                      className="poster-preview"
+                    />
+                  ) : (
                     <div className="poster-placeholder">
-                    📸 <span>Dodaj sliku</span>
+                      📸 <span>Dodaj sliku</span>
                     </div>
-                )}
+                  )}
                 </label>
                 <input
-                id="movie-picture"
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={(e) => {
+                  id="movie-picture"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
                     const file = e.target.files?.[0] || null;
                     setNewMovie({
-                    ...newMovie,
-                    picture: file,
-                    preview: file ? URL.createObjectURL(file) : "",
+                      ...newMovie,
+                      picture: file,
+                      preview: file ? URL.createObjectURL(file) : "",
                     });
-                }}
+                  }}
                 />
-            </div>
+              </div>
 
-            <input
+              <input
                 type="text"
                 placeholder="Naziv filma"
                 value={newMovie.name}
-                onChange={(e) => setNewMovie({ ...newMovie, name: e.target.value })}
+                onChange={(e) =>
+                  setNewMovie({ ...newMovie, name: e.target.value })
+                }
                 required
-            />
-            <textarea
+              />
+              <textarea
                 placeholder="Opis filma"
                 value={newMovie.description}
-                onChange={(e) => setNewMovie({ ...newMovie, description: e.target.value })}
-            />
-            <div className="modal-buttons">
-                <button type="submit" className="save-btn">💾 Sačuvaj</button>
-                <button
-                type="button"
-                onClick={() => setShowAddModal(false)}
-                className="cancel-btn"
-                >
-                ✖ Otkaži
+                onChange={(e) =>
+                  setNewMovie({ ...newMovie, description: e.target.value })
+                }
+              />
+              <div className="modal-buttons">
+                <button type="submit" className="save-btn">
+                  💾 Sačuvaj
                 </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="cancel-btn"
+                >
+                  ✖ Otkaži
+                </button>
+              </div>
             </form>
           </div>
         </div>

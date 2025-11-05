@@ -127,11 +127,19 @@
 .movie-info-overlay h3 {
   font-size: 16px;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .movie-info-overlay p {
   font-size: 13px;
   opacity: 0.8;
+  margin: 0; 
+  padding: 0 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .no-movies-text {
@@ -374,4 +382,100 @@
   color: white;
   scale: 1.1;
   transition: 114ms;
+}
+
+
+/* 🔍 Search bar */
+.search-bar-movies {
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  transition: all 0.3s;
+  width: 300px;
+}
+
+.search-bar-movies {
+  background: #fff;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  
+}
+
+.filter-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.role-filter {
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* 📱 Responsive layout */
+@media (max-width: 900px) {
+  .movie-page-container {
+    padding: 20px;
+  }
+
+  .movies-carousel {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .movie-tile {
+    flex: 0 0 45%;
+    height: 240px;
+  }
+
+  .user-card-movie {
+    width: 100%;
+    margin: 20px auto;
+  }
+
+  .modal.modern {
+    width: 90%;
+    padding: 30px;
+  }
+
+  .poster-preview,
+  .poster-placeholder {
+    width: 100%;
+    height: 200px;
+  }
+}
+
+@media (max-width: 600px) {
+  .movie-tile {
+    flex: 0 0 90%;
+  }
+
+  .movies-title {
+    font-size: 22px;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-bar-movies,
+  .role-filter {
+    width: 100%;
+  }
+}
+.filter-group-movies2 {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
 }
