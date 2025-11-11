@@ -161,19 +161,47 @@ router.get(
         return res.status(404).json({ success: false, message: "Beleška nije pronađena" });
       }
 
-      // Optional: authorization check — user must be creator or assigned
+      /* Optional: authorization check — user must be creator or assigned
       if (
         note.createdBy._id.toString() !== user._id.toString() &&
         !note.assignedTo.some((u) => u._id.toString() === user._id.toString()) &&
         user.role !== 1 // director can view all
       ) {
         return res.status(403).json({ success: false, message: "Nemate dozvolu da vidite ovu belešku" });
-      }
+      }*/
 
       res.json({ success: true, note });
     } catch (err) {
       console.error("Error fetching note by ID:", err);
       res.status(500).json({ success: false, message: "Greška pri učitavanju beleške" });
+    }
+  }
+);
+
+router.get(
+  "/all/:movieId",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res) => {
+    try {
+      const user = req.user;
+      const { movieId } = req.params;
+
+      if (!movieId) {
+        return res
+          .status(400)
+          .json({ success: false, message: "movieId je obavezan parametar" });
+      }
+
+      const notes = await Note.find({ _film_id: movieId }).populate(
+        "assignedTo createdBy"
+      );
+
+      return res.json({ success: true, notes });
+    } catch (err) {
+      console.error("❌ Error fetching all notes for movie:", err);
+      res
+        .status(500)
+        .json({ success: false, message: "Greška pri učitavanju beleški" });
     }
   }
 );

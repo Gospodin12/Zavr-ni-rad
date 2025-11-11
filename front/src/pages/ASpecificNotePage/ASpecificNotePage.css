@@ -211,3 +211,14 @@
     position: relative;
     top: 40px;
 }
+
+.add-comment button{
+  
+  background-color: #e74c3c;
+  transition: 122ms;
+}
+
+.add-comment button:hover{
+  scale: 1.1;
+  background-color: rgb(255, 56, 38);
+}

@@ -188,6 +188,13 @@ const handleFilter = async (
     lines = filtered;
   }
 
+  // 🧹 Clean diacritics and unsupported letters
+const cleanText = (text: string) =>
+      text
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // remove accent marks
+      .replace(/[čćšžđ]/g, c => ({ č: 'c', ć: 'c', š: 's', ž: 'z', đ: 'dj' }[c] as string)) // <--- Added type assertion here
+      .replace(/[ČĆŠŽĐ]/g, c => ({ Č: 'C', Ć: 'C', Š: 'S', Ž: 'Z', Đ: 'Dj' }[c] as string)); // <--- And here
   // --- Build new PDF ---
   const pdfDoc = await PDFDocument.create();
   let page = pdfDoc.addPage([595.28, 841.89]);
@@ -196,7 +203,7 @@ const handleFilter = async (
   let y = height - 60;
 
   for (const line of lines) {
-    const text = line.trim();
+    const text = cleanText(line.trim());
     if (!text) continue;
 
     if (y < 80) {
@@ -208,19 +215,19 @@ const handleFilter = async (
     const size = isChar ? 14 : 12;
     const x = isChar
       ? 297.64 - font.widthOfTextAtSize(text, size) / 2
-      : 80; // more left padding
+      : 80;
+
     page.drawText(text, { x, y, size, font, color: rgb(0, 0, 0) });
     y -= isChar ? 30 : 18;
   }
 
   const pdfBytes = await pdfDoc.save();
-  const blob = new Blob([new Uint8Array(pdfBytes)], {
-    type: "application/pdf",
-  });
+  const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
   setFilteredPdfUrl(url);
   setPageNumber(1);
 };
+
 
 
   const handleCharacterSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {

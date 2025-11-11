@@ -66,7 +66,14 @@ export default function AllNotePage() {
           : [rolesData.role];
         setUserRoles(roles);
 
-        const data = await noteService.getMyNotes(token, movieId);
+        let data;
+        if (roles.includes(1)) {
+          // Director → fetch ALL notes for the movie
+          data = await noteService.getAllNotesForMovie(token, movieId);
+        } else {
+          // Others → fetch only their notes
+          data = await noteService.getMyNotes(token, movieId);
+        }
         setNotes(data.notes);
         setFilteredNotes(data.notes);
       } catch (err) {
@@ -86,11 +93,13 @@ export default function AllNotePage() {
       new Set(userRoles.flatMap((r) => ROLE_CATEGORIES[r] || []))
     );
 
-    filtered = filtered.filter(
-      (n) =>
-        allowedCategories.includes(n.category) ||
-        allowedCategories.length === 0 // fallback for admins or undefined
-    );
+    if (!userRoles.includes(1)) {
+      filtered = filtered.filter(
+        (n) =>
+          allowedCategories.includes(n.category) ||
+          allowedCategories.length === 0 // fallback for admins or undefined
+      );
+    }
 
     if (searchTerm.trim() !== "") {
       filtered = filtered.filter(

@@ -4,6 +4,9 @@ import "./TeamPage.css";
 import Navbar from "../Navbar/Navbar";
 import deleteButton from "../../assets/delete.png";
 import noUser from "../../assets/noUser.png";
+import type { User } from "../../models/User";
+import type { MovieRole } from "../../models/MovieRole";
+import { backgroundService } from "../../services/backgroundService";
 
 import {
   getFREEUsersForMovie,
@@ -11,33 +14,25 @@ import {
   assignUserToMovie,
   removeUserFromMovie,
 } from "../../services/movieService";
-import { backgroundService } from "../../services/backgroundService";
 
-type User = {
-  _id: string;
-  name: string;
-  lastName: string;
-  picture?: string;
-};
 
-type UserRole = {
-  user: User;
-  role: number;
-  character?: string | null;
-};
+
 
 export default function TeamPage() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const { movieId } = useParams();
+  const [expandedRoles, setExpandedRoles] = useState<{ [key: string]: boolean }>({});
+  const [actorsExpanded, setActorsExpanded] = useState(false);
+
   const navigate = useNavigate();
-  const [users, setUsers] = useState<UserRole[]>([]);
+  const [users, setUsers] = useState<MovieRole[]>([]);
   const [freeUsers, setFreeUsers] = useState<User[]>([]);
   const [openPopupRole, setOpenPopupRole] = useState<string | null>(null);
   const [confirmUser, setConfirmUser] = useState<{
     user: User;
     role: number | "actors";
   } | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<UserRole | null>(null); // 🆕 for delete popup
+  const [deleteConfirm, setDeleteConfirm] = useState<MovieRole | null>(null); // 🆕 for delete popup
   const [actorCharacter, setActorCharacter] = useState("");
   const [searchFreeUser, setSearchFreeUser] = useState("");
   const token = localStorage.getItem("token");
@@ -129,7 +124,7 @@ export default function TeamPage() {
 
                     <div className="user-list-pop">
                       {filteredFreeUsers.length > 0 ? (
-                        filteredFreeUsers.map((user) => (
+                        filteredFreeUsers.slice(0, 8).map((user) => (
                           <div
                             key={user._id}
                             className="user-item-pop"
@@ -148,6 +143,7 @@ export default function TeamPage() {
                         <p>Nema slobodnih članova.</p>
                       )}
                     </div>
+
 
                     <button
                       className="button-close-pop"
@@ -212,7 +208,7 @@ export default function TeamPage() {
 
                 <div className="user-list-pop">
                   {filteredFreeUsers.length > 0 ? (
-                    filteredFreeUsers.map((user) => (
+                    filteredFreeUsers.slice(0, 8).map((user) => (
                       <div
                         key={user._id}
                         className="user-item-pop"
@@ -228,6 +224,7 @@ export default function TeamPage() {
                     <p>Nema slobodnih članova.</p>
                   )}
                 </div>
+
                 <button
                   className="button-close-pop"
                   onClick={() => setOpenPopupRole(null)}

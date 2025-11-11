@@ -12,7 +12,6 @@ export const noteService = {
       .get(API_URL, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => res.data),
 
-  // ✅ NEW FUNCTION — get all notes for scenario text highlighting
   getAllNotes: (token: any) =>
     axios
       .get(`${API_URL}/user`, { headers: { Authorization: `Bearer ${token}` } })
@@ -26,7 +25,13 @@ export const noteService = {
   getNoteById: (token:any,noteId:any) =>
       axios
         .get(`http://localhost:3000/notes/${noteId}`, {headers: { Authorization: `Bearer ${token}` }})
-        .then((res)=> res.data)
+        .then((res)=> res.data),
 
+  getAllNotesForMovie: (token: any, movieId: any) =>
+    axios
+      .get(`${API_URL}/all/${movieId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => res.data),
 
 };

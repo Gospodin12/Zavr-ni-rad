@@ -271,7 +271,7 @@ useEffect(() => {
         {/* Upload */}
         {user?.role === 1 && !scenario && (
           <div className="upload-section">
-            <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" className="hidden-input" onChange={handleFileChange} />
+            <input ref={fileInputRef} type="file" accept=".pdf" className="hidden-input" onChange={handleFileChange} />
             <button className="upload-button" onClick={() => fileInputRef.current?.click()}>
               📄 Dodaj scenario
             </button>
