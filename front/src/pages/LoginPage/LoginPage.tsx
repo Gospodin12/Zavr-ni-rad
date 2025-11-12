@@ -29,7 +29,7 @@ useEffect(() => {
       navigate("/film");
     } catch (err: any) {
       console.error(err);
-      setErrorMessage("Pogrešno korisničko ime ili lozinka!");
+      setErrorMessage("Pogrešan email ili lozinka!");
     }
   };
 
@@ -53,11 +53,11 @@ useEffect(() => {
             }}
           >
             <div className="form-group">
-              <label htmlFor="username">Korisničko ime</label>
+              <label htmlFor="username">Email</label>
               <input
                 id="username"
                 type="text"
-                placeholder="Unesi korisničko ime"
+                placeholder="Unesi email"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required

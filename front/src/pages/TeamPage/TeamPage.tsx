@@ -111,7 +111,7 @@ export default function TeamPage() {
                     <p>
                       Dodaj {roleId === "actors"
                         ? "Glumca"
-                        : roleNames[Number(roleId)]}
+                        : roleNames[Number(roleId)]}a
                     </p>
 
                     <input
